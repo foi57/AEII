@@ -23,4 +23,68 @@ export default {
             }
         })
     },
+    selectUserByName(name) {
+        return request({
+            url: '/users/selectByName',
+            method: 'get',
+            params: {
+                name: name
+            }
+        })
+    },
+    insertUser(user) {
+        console.log(user)
+        return request({
+            url: '/users/insert',
+            method: 'post',
+            params:{
+                name: user.userName,
+                phone: user.phone,
+                email: user.email,
+                password: user.password,
+                role: user.role
+            }
+        })
+    },
+    updateUser(user) {
+        return request({
+            url: '/users/update',
+            method: 'post',
+            params:{
+                id: user.id,
+                name: user.userName,
+                phone: user.phone,
+                email: user.email,
+                role: user.role
+            }
+        })
+    },
+    deleteUser(id) {
+        return request({
+            url: '/users/delete',
+            method: 'post',
+            params:{
+                id: id
+            }
+        })
+    },
+    selectPassword(name){
+        return request({
+            url: '/users/selectPassword',
+            method: 'get',
+            params:{
+                name: name
+            }
+        })
+    },
+    updatePassword(name, password){
+        return request({
+            url: '/users/updatePassword',
+            method: 'post',
+            params:{
+                name: name,
+                password: password
+            }
+        })
+    }
 }

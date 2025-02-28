@@ -3,7 +3,8 @@ import { ref } from 'vue'
 import admin from "../../api/user.js";
 import {ElMessage} from "element-plus";
 import router from "../router/index.js";
-
+import {Store} from "../store/index.js";
+const userStore = Store();
 const rules = {
   userName: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -24,8 +25,8 @@ const onSubmit = () => {
        type: 'success',
        message: '登录成功'
      })
+   userStore.setUserInfo(res.data.user)
     localStorage.setItem('token',res.data.token)
-    localStorage.setItem('userName',res.data.userName)
     router.push('/adminIndex')
   })
       .catch(err => {
@@ -33,7 +34,8 @@ const onSubmit = () => {
        type: 'error',
        message: '用户名或密码错误'
      })
-     })
+     console.log(err)
+      })
 }
 </script>
 
@@ -60,5 +62,9 @@ const onSubmit = () => {
   border: 2px solid #ccc;
   border-radius: 10px;
 }
-
+.el-button {
+  left: 50%;
+  transform: translateX(-50%);
+  position: relative;
+}
 </style>

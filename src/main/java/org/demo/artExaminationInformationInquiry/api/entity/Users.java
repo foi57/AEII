@@ -1,12 +1,13 @@
 package org.demo.artExaminationInformationInquiry.api.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,8 +19,7 @@ import lombok.Setter;
  * @author 黄毓峰
  * @since 2025-02-18
  */
-@Getter
-@Setter
+@Data
 @TableName("users")
 @ApiModel(value = "Users对象", description = "")
 public class Users implements Serializable {
@@ -36,17 +36,22 @@ public class Users implements Serializable {
     private String usersName;
 
     @TableField("users_password")
+    @JsonIgnore
     private String usersPassword;
 
     @TableField("users_email")
     private String usersEmail;
 
     @TableField("users_phone")
-    private Integer usersPhone;
+    private String usersPhone;
 
     @TableField("users_creationTime")
     private LocalDateTime userCreationTime;
 
     @TableField("users_role")
     private String usersRole;
+
+    @TableLogic
+    @TableField("deleted")
+    private Integer deleted;
 }

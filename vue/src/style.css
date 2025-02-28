@@ -81,8 +81,4 @@ button:focus-visible {
 
 }
 
-.el-button {
-  left: 50%;
-  transform: translateX(-50%);
-  position: relative;
-}
+

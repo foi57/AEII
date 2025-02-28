@@ -25,7 +25,6 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        logger.debug("username:{}", username);
         Users user = iUsersService.selectUsersByName(username);
 
         return new org.springframework.security.core.userdetails.User(user.getUsersName(), user.getUsersPassword(), getAuthorities(user));
@@ -33,8 +32,6 @@ public class MyUserDetailsService implements UserDetailsService {
     private  Collection<? extends GrantedAuthority> getAuthorities(Users user) {
         List<GrantedAuthority> authorities = new ArrayList<>();
         String role = user.getUsersRole();
-        logger.debug("role:{}", role);
-
             authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role));
         return authorities;
     }

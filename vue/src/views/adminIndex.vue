@@ -2,12 +2,17 @@
 import {ref} from "vue";
 import adminMange from "../components/userManage.vue";
 import router from "../router/index.js";
-const userName = localStorage.getItem('userName')
+import {Store} from "../store/index.js";
+import userCenter from "../components/userCenter.vue";
+const userStore = Store();
+const userName = userStore.usersName;
+console.log(userName)
 const activeIndex = ref('0')
 const outLogin = () => {
   router.push('/adminLogin')
   localStorage.removeItem('token')
-  localStorage.removeItem('userName')
+  userStore.$reset()
+  localStorage.removeItem('userStore')
 }
 </script>
 
@@ -16,7 +21,9 @@ const outLogin = () => {
     <el-container>
       <el-aside width="200px">
 
-        <el-menu>
+        <el-menu
+        :default-active="activeIndex"
+        @select="(index) => activeIndex = index">
           <el-sub-menu>
             <template #title>
               <span>{{userName}}</span>
@@ -28,19 +35,21 @@ const outLogin = () => {
         <el-menu
         :default-active="activeIndex"
         @select="(index) => activeIndex = index">
-          <el-menu-item index="1">资讯</el-menu-item>
-          <el-menu-item index="2">专业</el-menu-item>
-          <el-menu-item index="3">学院</el-menu-item>
-          <el-menu-item index="4">考试</el-menu-item>
-          <el-menu-item index="5">用户</el-menu-item>
+          <el-menu-item index="3">资讯</el-menu-item>
+          <el-menu-item index="4">专业</el-menu-item>
+          <el-menu-item index="5">学院</el-menu-item>
+          <el-menu-item index="6">考试</el-menu-item>
+          <el-menu-item index="7">用户</el-menu-item>
         </el-menu>
       </el-aside>
       <el-main>
-        <component :is="activeIndex === '1' ? infoMange :
-                        activeIndex === '2'? majorMange :
-                        activeIndex === '3'? collegeMange :
-                        activeIndex === '4'? examMange :
-                        activeIndex === '5'? adminMange : null"></component>
+        <component :is="
+                        activeIndex === '1'? userCenter :
+                        activeIndex === '3' ? infoMange :
+                        activeIndex === '4'? majorMange :
+                        activeIndex === '5'? collegeMange :
+                        activeIndex === '6'? examMange :
+                        activeIndex === '7'? adminMange : null"></component>
       </el-main>
     </el-container>
   </div>

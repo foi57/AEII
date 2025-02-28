@@ -26,7 +26,7 @@ request.interceptors.response.use(response => {
     const url = request.getUri();
     if (error.response && error.response.status === 401) {
         localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        localStorage.removeItem('userStore')
         router.push('/adminLogin')
     }else if (url.includes('admin')) {
         router.push('/adminLogin');
