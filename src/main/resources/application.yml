@@ -1,5 +1,6 @@
 spring:
   application:
+
     name: AEII
   datasource:
     url:  jdbc:mysql://localhost:3308/AEII?characterEncoding=utf8&useSSL=false
@@ -9,6 +10,7 @@ spring:
 jwt:
   secret: yourjwtsecretkeydsafsafdadafgsgkmld9430jfow8ty382jwfoibewgfnmdsi983wdmaliskbdfi3qgdjpjajdkjlagsyjd8i2q8odp9jawbdbais
   expiration: 3600
+  refreshExpiration: 604800  # 7天（单位：秒）
 logging:
   level:
     org:
@@ -20,3 +22,5 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+server:
+  port: 8081

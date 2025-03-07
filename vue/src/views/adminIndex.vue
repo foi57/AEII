@@ -4,6 +4,9 @@ import adminMange from "../components/userManage.vue";
 import router from "../router/index.js";
 import {Store} from "../store/index.js";
 import userCenter from "../components/userCenter.vue";
+import majorMange from "../components/majorMange.vue";
+import universityMange from "../components/university/universityMange.vue";
+import articleMange from "../components/articleMange.vue";
 const userStore = Store();
 const userName = userStore.usersName;
 console.log(userName)
@@ -38,17 +41,15 @@ const outLogin = () => {
           <el-menu-item index="3">资讯</el-menu-item>
           <el-menu-item index="4">专业</el-menu-item>
           <el-menu-item index="5">学院</el-menu-item>
-          <el-menu-item index="6">考试</el-menu-item>
           <el-menu-item index="7">用户</el-menu-item>
         </el-menu>
       </el-aside>
       <el-main>
         <component :is="
                         activeIndex === '1'? userCenter :
-                        activeIndex === '3' ? infoMange :
+                        activeIndex === '3' ? articleMange :
                         activeIndex === '4'? majorMange :
-                        activeIndex === '5'? collegeMange :
-                        activeIndex === '6'? examMange :
+                        activeIndex === '5'? universityMange :
                         activeIndex === '7'? adminMange : null"></component>
       </el-main>
     </el-container>

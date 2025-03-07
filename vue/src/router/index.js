@@ -23,9 +23,12 @@ const router= createRouter({
 // 添加路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = Store()
-  const isAuthenticated = localStorage.getItem('token') && userStore.usersName
+  const isAuthenticated = localStorage.getItem('accessToken') && userStore.usersName
 
-  if (to.path === '/adminIndex' && !isAuthenticated) {
+  // 修复2：增加已登录时访问登录页的重定向
+  if (to.path === '/adminLogin' && isAuthenticated) {
+    next('/adminIndex')
+  } else if (to.path === '/adminIndex' && !isAuthenticated) {
     next('/adminLogin')
   } else {
     next()

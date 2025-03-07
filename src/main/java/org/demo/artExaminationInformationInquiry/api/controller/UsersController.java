@@ -46,8 +46,9 @@ public class UsersController {
       String token = jwtTokenUtil.generateToken(users.getUsersName());
       Map<String,Object> map=new java.util.HashMap<>();
       map.put("user",users);
-      map.put("token", token);
-
+      map.put("accessToken", token);
+      String refreshToken = jwtTokenUtil.generateRefreshToken(users.getUsersName());
+      map.put("refreshToken", refreshToken);
          return ResponseEntity.ok(map);
 
    }

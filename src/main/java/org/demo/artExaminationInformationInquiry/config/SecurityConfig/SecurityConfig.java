@@ -33,8 +33,10 @@ public class SecurityConfig{
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers("/api/users/login","/api/users/register").permitAll()
-                    .requestMatchers("/api/admin/**").hasAnyRole("admin","seniorAdmin")
+                    .requestMatchers("/api/users/delete").hasAnyRole("seniorAdmin")
+                    .requestMatchers("/api/university/uploadImg").hasAnyRole("seniorAdmin","admin")
+                    .requestMatchers("/api/users/login","/api/users/register","/auth/refresh","/images/university/**","/api/university/uploadImg").permitAll()
+
                     .anyRequest().authenticated()
            )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

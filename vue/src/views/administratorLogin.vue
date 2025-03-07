@@ -26,7 +26,8 @@ const onSubmit = () => {
        message: '登录成功'
      })
    userStore.setUserInfo(res.data.user)
-    localStorage.setItem('token',res.data.token)
+    localStorage.setItem('accessToken',res.data.accessToken)
+    localStorage.setItem('refreshToken',res.data.refreshToken)
     router.push('/adminIndex')
   })
       .catch(err => {

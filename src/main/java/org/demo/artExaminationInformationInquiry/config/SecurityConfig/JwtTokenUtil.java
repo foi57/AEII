@@ -20,6 +20,9 @@ public class JwtTokenUtil {
     @Value("${jwt.expiration}")
     private Long expiration; // 过期时间（秒）
 
+    @Value("${jwt.refreshExpiration}")  // 新增refresh token有效期配置
+    private Long refreshExpiration;
+
     // 获取签名密钥
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
@@ -36,6 +39,15 @@ public class JwtTokenUtil {
                 .setIssuedAt(now)              // 签发时间
                 .setExpiration(expiryDate)     // 过期时间
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512) // 签名算法和密钥
+                .compact();
+    }
+
+    // 新增refresh token生成方法
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration * 1000))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
@@ -58,6 +70,16 @@ public class JwtTokenUtil {
         Date expiration = null;
             expiration = getClaimsFromToken(token).getExpiration();
         return expiration.before(new Date());
+    }
+
+    // 新增token刷新验证方法
+    public boolean validateRefreshToken(String refreshToken) {
+        try {
+            getClaimsFromToken(refreshToken);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // 从 Token 中获取 Claims

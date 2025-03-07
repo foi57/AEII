@@ -1,0 +1,37 @@
+import request from "../request.js";
+export default {
+    selectMajorListByName(name, page, size) {
+        return request({
+            url: '/major/selectMajorListByName',
+            method: 'get',
+            params: {
+                name: name,
+                page: page,
+                size: size
+            }
+        })
+    },
+    updateMajor(major) {
+        return request({
+            url: '/major/updateMajor',
+            method: 'put',
+            data: major
+        })
+    },
+    deleteMajorById(id) {
+        return request({
+            url: '/major/deleteMajor',
+            method: 'delete',
+            params: {
+                id: id
+            }
+        })
+    },
+    insertMajor(major) {
+        return request({
+            url: '/major/insertMajor',
+            method: 'post',
+            data: major
+        })
+    }
+}

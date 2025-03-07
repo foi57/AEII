@@ -9,6 +9,7 @@ const user =ref(null);
 
 userApi.selectUserByName(userName).then(res => {
   user.value=res.data;
+  console.log(user.value)
 })
 const userForm = ref({
   id: '',
@@ -97,7 +98,7 @@ const updatePassword = () => {
       <el-descriptions-item label="邮箱">{{user[0].usersEmail}}</el-descriptions-item>
       <el-descriptions-item label="电话">{{user[0].usersPhone}}</el-descriptions-item>
       <el-descriptions-item label="角色">{{user[0].usersRole}}</el-descriptions-item>
-      <el-descriptions-item label="创建时间">{{user[0].usersCreateTime}}</el-descriptions-item>
+      <el-descriptions-item label="创建时间">{{user[0].userCreationTime}}</el-descriptions-item>
     </el-descriptions>
   </div>
 <div v-else>

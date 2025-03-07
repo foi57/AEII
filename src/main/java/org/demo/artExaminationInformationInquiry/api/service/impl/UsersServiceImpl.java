@@ -70,7 +70,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     public String selectPassword(String usersName){
         return lambdaQuery().eq(Users::getUsersName, usersName).one().getUsersPassword();
     }
-    public void updatePassword(String usersName,String usersPassword){
+    public void updatePassword(String usersName, String usersPassword){
         lambdaUpdate().eq(Users::getUsersName, usersName).set(Users::getUsersPassword, usersPassword).update();
     }
 }
