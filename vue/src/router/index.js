@@ -12,6 +12,18 @@ const routes = [
     path: '/adminIndex',
     name: 'adminIndex',
     component: () => import('../views/adminIndex.vue')
+  },
+  {
+    path: '/article/detail/:id',
+    name: 'ArticleDetail',
+    component: () => import('../views/ArticleDetail.vue'),
+    props: true
+  },
+  {
+    path: '/article/edit/:id',
+    name: 'ArticleEdit',
+    component: () => import('../components/articlePublish.vue'),
+    props: true
   }
 ];
 

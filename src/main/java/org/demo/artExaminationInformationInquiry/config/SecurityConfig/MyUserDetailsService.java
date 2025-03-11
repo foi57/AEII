@@ -32,6 +32,9 @@ public class MyUserDetailsService implements UserDetailsService {
     private  Collection<? extends GrantedAuthority> getAuthorities(Users user) {
         List<GrantedAuthority> authorities = new ArrayList<>();
         String role = user.getUsersRole();
+        if (!role.startsWith("ROLE_")){
+            role = "ROLE_" + role;
+        }
             authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role));
         return authorities;
     }

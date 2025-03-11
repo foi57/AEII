@@ -6,6 +6,7 @@ import {Store} from "../store/index.js";
 import userCenter from "../components/userCenter.vue";
 import majorMange from "../components/majorMange.vue";
 import universityMange from "../components/university/universityMange.vue";
+import articlePublish from "../components/articlePublish.vue";
 import articleMange from "../components/articleMange.vue";
 const userStore = Store();
 const userName = userStore.usersName;
@@ -36,9 +37,20 @@ const outLogin = () => {
           </el-sub-menu>
         </el-menu>
         <el-menu
+            :default-active="activeIndex"
+            @select="(index) => activeIndex = index">
+          <el-sub-menu>
+            <template #title>
+              <span>资讯</span>
+            </template>
+            <el-menu-item index="3">发布资讯</el-menu-item>
+            <el-menu-item index="6">管理资讯</el-menu-item>
+          </el-sub-menu>
+        </el-menu>
+        <el-menu
         :default-active="activeIndex"
         @select="(index) => activeIndex = index">
-          <el-menu-item index="3">资讯</el-menu-item>
+
           <el-menu-item index="4">专业</el-menu-item>
           <el-menu-item index="5">学院</el-menu-item>
           <el-menu-item index="7">用户</el-menu-item>
@@ -47,7 +59,8 @@ const outLogin = () => {
       <el-main>
         <component :is="
                         activeIndex === '1'? userCenter :
-                        activeIndex === '3' ? articleMange :
+                        activeIndex === '3' ? articlePublish :
+                        activeIndex === '6'?  articleMange:
                         activeIndex === '4'? majorMange :
                         activeIndex === '5'? universityMange :
                         activeIndex === '7'? adminMange : null"></component>

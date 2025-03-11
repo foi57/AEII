@@ -4,9 +4,6 @@ import serverUrl from "./serverUrl.js";
 const request = axios.create({
     baseURL:  serverUrl.url+'/api',
     timeout: 5000,
-    headers: {
-        'Content-Type': 'application/json'
-    }
 })
 request.interceptors.request.use(config => {
     const token = localStorage.getItem('accessToken')
@@ -20,6 +17,7 @@ request.interceptors.request.use(config => {
 }, error => {
     return  Promise.reject(error)
 })
+
 
 let isRefreshing = false;
 let failedQueue = [];

@@ -3,21 +3,43 @@ import request from "../request.js";
 export default {
     publish(data) {
         return request({
-            url: '/article/publish',
+            url: '/article/insert',
             method: 'post',
             data
         })
     },
-    uploadImage(file) {
-        const formData = new FormData()
-        formData.append('file', file)
+    uploadImage(formData) {
+        console.log('file',formData)
         return request({
-            url: '/article/uploadImage',
+            url: '/article/upload/image',
             method: 'post',
             data: formData,
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
+        })
+    },
+    selectArticleList(data) {
+        return request({
+            url: '/article/select',
+            method: 'post',
+            data
+        })
+    },
+    selectArticleDetail(id) {
+        return request({
+            url: '/article/detail/' + id,
+            method: 'get',
+        })
+    },
+    updateArticle(data) {
+        return request({
+            url: '/article/update',
+            method: 'POST',
+            data
+        })
+    },
+    deleteArticle(id) {
+        return request({
+            url: '/article/delete/' + id,
+            method: 'delete',
         })
     }
 }

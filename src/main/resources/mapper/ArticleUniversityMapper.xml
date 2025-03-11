@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.demo.artExaminationInformationInquiry.api.mapper.ArticleUniversityMapper">
+
+
+    <insert id="batchInsert">
+        INSERT INTO article_university (article_id, university_Name)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.articleId}, #{item.universityName})
+        </foreach>
+    </insert>
+</mapper>

@@ -57,11 +57,7 @@ const columns = ref([
     dataKey: 'colleges',
     title: '操作',
     cellRenderer: ({ rowData }) => h('div',[
-        h( resolveComponent('ElButton'),
-            {
-              type: 'primary',
-            },
-            () => '开设院校'),
+
         h( resolveComponent('ElButton'),
             {
               type: 'primary',

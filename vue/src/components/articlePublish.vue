@@ -1,0 +1,248 @@
+<template>
+  <div class="article-publish">
+    <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
+      <el-form-item label="标题" prop="articleTitle">
+        <el-input v-model="form.articleTitle" placeholder="请输入文章标题"></el-input>
+      </el-form-item>
+      <div class="category-select-block">
+        <el-form-item label="分类" prop="articleType">
+          <el-select v-model="form.articleType" placeholder="请选择分类" style="width: 150px">
+            <el-option
+                v-for="item in categories"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <label>添加关联院校</label>
+          <el-autocomplete
+              v-model="universityName"
+              :fetch-suggestions="querySearchAsync"
+              placeholder="请输入院校名称"
+              @select="handleSearch"
+              style="width: 300px; margin: 20px"
+          ></el-autocomplete>
+          <el-button type="primary" @click="handleSearch">添加</el-button>
+        </el-form-item>
+      </div>
+      <el-form-item label="关联院校">
+        <el-input-tag v-model="form.affiliatedUniversities"
+                      clearable
+                      :trigger="null"
+                      draggable></el-input-tag>
+      </el-form-item>
+      <el-form-item >
+        <div class="button-block">
+        <el-button type="primary" @click="submitForm">立即发布</el-button>
+        <el-button @click="resetForm">重置</el-button>
+        </div>
+      </el-form-item>
+      <el-form-item label="内容" prop="content">
+        <div style="border: 1px solid #ccc" class="editor-block">
+          <Toolbar
+              class="editor-toolbar"
+            :editor="editor"
+            :defaultConfig="toolbarConfig"
+          />
+          <Editor
+              class="editor-content"
+            v-model="form.articleContent"
+            :defaultConfig="editorConfig"
+            @onCreated="handleEditorCreated"
+          />
+        </div>
+      </el-form-item>
+
+
+    </el-form>
+  </div>
+</template>
+
+<script setup>
+
+import '@wangeditor/editor/dist/css/style.css'
+import { ref, reactive, shallowRef } from 'vue'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import {ElMessage, EVENT_CODE} from 'element-plus'
+import article from '../../api/article.js'
+import serverUrl from "../../serverUrl.js";
+import universityApi from "../../api/university.js";
+import {Store} from "../store/index.js";
+import {useRoute} from "vue-router";
+const route = useRoute()
+const userStore = Store();
+// 需要新建API模块
+
+// 编辑器实例
+const editId = route.params.id;
+if (editId) {
+
+  article.selectArticleDetail(editId).then(res => {
+    document.title = `编辑文章 - ${res.data.articleTitle}`
+    form.articleTitle = res.data.articleTitle;
+    form.articleType = res.data.articleType;
+    form.articleContent = res.data.articleContent;
+    for (const item of res.data.affiliatedUniversities){
+      form.affiliatedUniversities.push(item.universityName)
+    }
+    console.log('关联院校',form.affiliatedUniversities)
+  }).catch(err => {
+    console.log(err)
+    ElMessage.error('获取文章详情失败')
+  })
+}
+const universityName = ref('');
+const editor = shallowRef()
+const toolbarConfig = {
+  excludeKeys: [
+          // 移除视频相关菜单
+    'group-video',
+  ]
+}
+const editorConfig = {
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file, insertFn) {  // ← 修改这里
+        try {
+          const formData = new FormData()
+          formData.append('file', file)
+
+          // 使用配置好的axios实例
+          const res = await article.uploadImage(formData)
+
+          // 根据实际响应结构调整
+          insertFn(serverUrl.url+res.data.url)
+        } catch (err) {
+          console.error('上传失败:', err)
+        }
+      },
+      fieldName: 'file',
+      maxFileSize: 3 * 1024 * 1024, // 3M
+      allowedFileTypes: ['image/*'],
+    }
+  }
+}
+
+// 表单数据
+const form = reactive({
+  articleTitle: '',
+  articleType: '',
+  articleContent: '',
+  affiliatedUniversities : [],
+  articleSource: userStore.usersId,
+})
+
+// 验证规则
+const rules = {
+  articleTitle: [{ required: true, message: '标题不能为空', trigger: 'blur' }],
+  articleType: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  articleContent: [{ required: true, message: '内容不能为空', trigger: 'blur' }]
+}
+
+// 分类选项
+const categories = [
+  { label: '招生信息', value: 'admissionsInformation' },
+  { label: '考试通知', value: 'notice' },
+  { label: '政策解读', value: 'policy' },
+  { label: '备考指南', value: 'guide' }
+]
+
+// 提交表单
+const submitForm = async () => {
+  if (editId) {
+    const data = {
+      ...form,
+      articleId: editId,
+    }
+    await article.updateArticle(data);
+  }else {
+    try {
+      await article.publish(form)
+      ElMessage.success('发布成功')
+      resetForm()
+    } catch (error) {
+      ElMessage.error('发布失败')
+    }
+  }
+}
+
+// 重置表单
+const resetForm = () => {
+  form.articleTitle = ''
+  form.articleType = ''
+  form.articleContent = ''
+  if (editor.value) {
+    editor.value.clear()
+  }
+  form.universityId = '';
+}
+const handleEditorCreated = (editorInstance) => {
+  editor.value = editorInstance  // 确保正确接收编辑器实例
+}
+
+
+
+const querySearchAsync = debounce(async (queryString, cb) => {
+  if (queryString) {
+    try {
+      const res = await universityApi.selectUniversityListByName(universityName.value, '','','','', 1,10)
+      let select = '';
+      select = res.data.records.map(item => {
+        return { value: item.universityName, ...item };
+      });
+      cb(select);
+    } catch (error) {
+      console.error('获取建议失败:', error);
+      cb([]);
+    }
+  } else {
+    cb([]);
+  }
+}, 500);
+
+// 实际搜索处理
+const handleSearch = async () => {
+  const res = await universityApi.selectUniversityListByName(universityName.value, '', '', '', '', 1,10)
+  form.affiliatedUniversities.push(res.data.records[0].universityName);
+};
+
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+</script>
+<style scoped>
+.editor-block {
+  width: 100%;
+  height: 500px;
+}
+.editor-container {
+  border: 1px solid #ccc;
+  height: 600px;  /* 增加总高度 */
+}
+
+.editor-toolbar {
+  border-bottom: 1px solid #ccc;
+}
+
+.editor-content {
+  height: calc(100% - 41px); /* 给工具栏留出空间 */
+}
+.category-select-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.button-block {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+</style>

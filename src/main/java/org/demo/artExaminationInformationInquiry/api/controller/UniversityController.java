@@ -49,13 +49,13 @@ public class UniversityController {
 
     try {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path uploadPath = Paths.get("E:\\code\\java\\learn\\ArtExaminationInformationInquiry\\file\\university");
+        Path uploadPath = Paths.get(System.getProperty("user.dir") + "\\file\\university\\");
         Files.createDirectories(uploadPath);
         Files.copy(file.getInputStream(), uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
 
         // 删除旧文件
         if (universitySchoolBadge != null) {
-            Path oldFilePath = uploadPath.resolve("E:\\code\\java\\learn\\ArtExaminationInformationInquiry\\file\\university\\"+universitySchoolBadge);
+            Path oldFilePath = uploadPath.resolve(System.getProperty("user.dir") +"\\file\\university\\"+universitySchoolBadge);
             if (Files.exists(oldFilePath)) {
                 Files.delete(oldFilePath);
             }

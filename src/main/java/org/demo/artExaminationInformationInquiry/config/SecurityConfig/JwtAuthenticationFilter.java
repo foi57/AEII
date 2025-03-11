@@ -37,10 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = null;
         logger.debug("request.getRequestURI(): {}", request.getRequestURI());
         String uri = request.getRequestURI();
-        if (uri.equals("/api/auth/refresh") || uri.startsWith("/api/images/university/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+
 
 
         try {

@@ -1,13 +1,12 @@
 package org.demo.artExaminationInformationInquiry.api.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -41,11 +40,18 @@ public class Article implements Serializable {
     private LocalDate articleReleased;
 
     @TableField("article_source")
-    private String articleSource;
+    private Integer articleSource;
 
     @TableField("article_type")
     private String articleType;
 
-    @TableField("university_id")
-    private Long universityId;
+    @TableField(exist = false) // 表示该字段不存在于数据库表中
+    private String userName;
+
+    @TableField(exist = false) // 表示该字段不存在于数据库表中
+    private List<ArticleUniversity> affiliatedUniversities;
+
+    @TableLogic
+    @TableField(value = "deleted",fill = FieldFill.INSERT)
+    private Integer deleted;
 }

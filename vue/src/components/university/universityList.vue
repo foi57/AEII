@@ -334,10 +334,7 @@ const querySearchAsync = debounce(async (queryString, cb) => {
   }
 }, 500);
 
-// 实际搜索处理
-const handleSearch = () => {
-  select();
-};
+
 
 // 防抖函数
 function debounce(fn, delay) {
@@ -347,6 +344,10 @@ function debounce(fn, delay) {
     timer = setTimeout(() => fn.apply(this, args), delay);
   };
 }
+// 实际搜索处理
+const handleSearch = () => {
+  select();
+};
 
 const deleteUniversity = () => {
   handleDeleteDialog=false
