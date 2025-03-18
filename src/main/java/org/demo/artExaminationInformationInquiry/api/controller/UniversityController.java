@@ -1,6 +1,8 @@
 package org.demo.artExaminationInformationInquiry.api.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Param;
 import org.demo.artExaminationInformationInquiry.api.entity.University;
 import org.demo.artExaminationInformationInquiry.api.service.IUniversityService;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,7 @@ import java.util.*;
  * @author 黄毓峰
  * @since 2025-03-04
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/university")
 public class UniversityController {
@@ -87,5 +90,17 @@ public class UniversityController {
     @DeleteMapping("/deleteUniversity")
     public boolean deleteUniversity(@RequestParam("id") Long id) {
         return universityService.removeById(id);
+    }
+
+    @GetMapping("/selectEstablishmentUniversity")
+    public Page<University> selectEstablishmentUniversity(@RequestParam("majorId") Long majorId,@RequestParam("name") String name,@RequestParam("area") String area,@RequestParam("type") String type,
+            @RequestParam("level") String level,@RequestParam("features") String features
+            ,@RequestParam("page") int pageNum, @RequestParam("size") int pageSize){
+        log.debug("majorId:{},name:{},area:{},type:{},level:{},features:{},pagNum:{},pageSize:{}",majorId,name,area,type,level,features,pageNum,pageSize);
+        return universityService.selectAffiliatedUniversityList(majorId,name,area,type,level,features,pageNum,pageSize);
+    }
+    @GetMapping("/selectById")
+    public University selectUniversityById(@RequestParam("id") Long id){
+        return universityService.getById(id);
     }
 }

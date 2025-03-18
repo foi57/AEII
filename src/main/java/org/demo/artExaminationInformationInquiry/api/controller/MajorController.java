@@ -46,4 +46,9 @@ public class MajorController {
         logger.debug("major: {}", major);
         return majorService.save(major);
     }
+    @GetMapping("/selectMajorListByUniversityId")
+    public List<Major> selectMajorListByUniversityId(@RequestParam("universityId") Long universityId) {
+        logger.debug("universityId: {}", universityId);
+        return majorService.selectMajorListByUniversityId(universityId);
+    }
 }

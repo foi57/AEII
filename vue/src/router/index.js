@@ -24,6 +24,49 @@ const routes = [
     name: 'ArticleEdit',
     component: () => import('../components/articlePublish.vue'),
     props: true
+  },
+  {
+    path: '/major/university/:id/:name',
+    name: 'universityList',
+    component: () => import('../components/university/universityList.vue'),
+    props: true
+  },
+  {
+    path: '/userIndex'
+    ,name: 'userIndex',
+    component: () => import('../views/userIndex.vue')
+  },
+  {
+    path: '/articles/:category',
+    name: 'Articles',
+    component: () => import('../views/Articles.vue'),
+    props: true
+  },
+  {
+    path: '/university'
+   ,name: 'university',
+    component: () => import('../components/university/universityList.vue')
+  },
+  {
+    path: '/university/detail/:id',
+    name: 'universityDetail',
+    component: () => import('../views/universityDetail.vue'),
+    props: true
+  },
+  {
+    path: '/major/detail/:name',
+    component: () => import('../views/majorDetail.vue'),
+    props: true
+  },
+  {
+    path: '/major',
+    component: () => import('../views/major.vue')
+  },
+  {
+    path: '/university/articles/:universityName/:category',
+    name: 'UniversityArticles',
+    component: () => import('../views/articles.vue'),
+    props: true
   }
 ];
 

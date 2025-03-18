@@ -21,4 +21,5 @@ public interface IArticleService extends IService<Article> {
      Page<Article> selectArticleListByType(String title,String type,Integer pageNum, Integer pageSize);
      void updateArticle(Map<String,Object> articleMap);
      Page<Article> selectArticleListByName(String name,Integer pageNum, Integer pageSize);
+     Page<Article> selectArticleListByUniversityName(String universityName,String articleType, Integer pageNum, Integer pageSize);
 }

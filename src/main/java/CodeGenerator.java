@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 import com.baomidou.mybatisplus.generator.config.OutputFile;
 import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
+import com.baomidou.mybatisplus.generator.model.ClassAnnotationAttributes;
+import lombok.Data;
+
 public class CodeGenerator {
 
     public static void main(String[] args) {
@@ -34,8 +37,10 @@ public class CodeGenerator {
                     builder.controllerBuilder() // 启用控制器生成器
                             .enableRestStyle(); // 开启 Rest 风格，生成 @RestController
                     builder.entityBuilder()
-                            .enableLombok() // 开启 Lombok 注解
+                            .enableLombok(new ClassAnnotationAttributes("@Data","lombok.Data"))
+                            .enableLombok(new ClassAnnotationAttributes("@Accessors(chain = true)","lombok.experimental.Accessors"))
                             .enableTableFieldAnnotation(); // 开启字段注解
+
 
                 })
                 .templateEngine(new FreemarkerTemplateEngine()) // 使用 Freemarker 引擎模板

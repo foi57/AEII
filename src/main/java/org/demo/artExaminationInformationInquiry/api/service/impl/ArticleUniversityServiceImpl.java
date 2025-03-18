@@ -1,6 +1,7 @@
 package org.demo.artExaminationInformationInquiry.api.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.ArticleUniversity;
 import org.demo.artExaminationInformationInquiry.api.mapper.ArticleUniversityMapper;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleUniversityService;

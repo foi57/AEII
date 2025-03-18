@@ -4,7 +4,22 @@ import {ref} from "vue";
 import serverUrl from "../../../serverUrl.js";
 import {Store} from "../../store/index.js";
 import {ElMessage, ElSelectV2} from "element-plus";
+import {useRoute} from "vue-router";
+import major_university from "../../../api/major_university.js";
 
+const props = defineProps({
+  majorId: {
+    type: Number,
+    default: null
+  }
+})
+
+const route = useRoute()
+let majorId =route.params.id;
+if (majorId === undefined) {
+  majorId = props.majorId;
+}
+const hoverUniversityId = ref(null);
 const userStore = Store();
 const universityList = ref([])
 const currentPage3 = ref(1);
@@ -21,7 +36,11 @@ const universityForm = ref({
   universityLevel: '',
   universityType: '',
   universityFeatures: [],
-  universityIntroduction: ''
+  universityIntroduction: '',
+  // 新增以下字段
+  universityPhone: '',
+  universityEmail: '',
+  universityWebsite: ''
 })
 
 const universityFormS = ref({
@@ -36,17 +55,28 @@ const universityFormS = ref({
 })
 
 const select = async () => {
+ if (majorId) {
+   universityApi.selectEstablishUniversityList(majorId,universityFormS.value.universityName,universityFormS.value.universityArea,universityFormS.value.universityType,universityFormS.value.universityLevel,
+   universityFormS.value.universityFeatures,currentPage3.value,pageSize3.value
+   ).then(res => {
+     console.log(res.data)
+     universityList.value = res.data.records;
 
-  await universityApi.selectUniversityListByName(universityFormS.value.universityName, universityFormS.value.universityArea,universityFormS.value.universityLevel,universityFormS.value.universityType,universityFormS.value.universityFeatures,currentPage3.value, pageSize3.value).then(res => {
-    universityList.value = res.data.records;
-    count.value = res.data.total;
-  })
+     count.value = res.data.total;
+   })
+ }else {
+   console.log('majorId',majorId)
+   await universityApi.selectUniversityListByName(universityFormS.value.universityName, universityFormS.value.universityArea,universityFormS.value.universityLevel,universityFormS.value.universityType,universityFormS.value.universityFeatures,currentPage3.value, pageSize3.value).then(res => {
+     universityList.value = res.data.records;
+     count.value = res.data.total;
+   })
+ }
 }
 select();
 
 let editDialog = ref(false);
 const clickUniversity = (university) => {
-  if(userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin'){
+  if(userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin' && route.path==='/adminIndex'){
     editDialog.value=true;
     universityForm.value.universityId=university.universityId;
     universityForm.value.universitySchoolBadge=university.universitySchoolbadge;
@@ -57,6 +87,15 @@ const clickUniversity = (university) => {
     universityForm.value.universityFeatures =
         university.universityFeatures?.split(',')?.filter(Boolean) || [];
     universityForm.value.universityIntroduction=university.universityIntroduction;
+    universityForm.value.universityPhone=university.universityPhone;
+    universityForm.value.universityEmail=university.universityEmail;
+    universityForm.value.universityWebsite=university.universityWeb;
+  }else {
+    window.open(
+        `${window.location.origin}/university/detail/${university.universityId}`,
+        '_blank'
+    )
+
   }
 }
 const handleUploadSuccess = (response) => {
@@ -67,7 +106,11 @@ const url = serverUrl.url;
 const updateUniversity = () => {
   const formData = {
     ...universityForm.value,
-    universityFeatures: universityForm.value.universityFeatures.join(',')
+    universityFeatures: universityForm.value.universityFeatures.join(','),
+    // 处理空字符串转为null
+    universityPhone: universityForm.value.universityPhone || null,
+    universityEmail: universityForm.value.universityEmail || null,
+    universityWebsite: universityForm.value.universityWebsite || null
   };
   universityApi.updateUniversity(formData).then(res => {
     ElMessage.success('编辑成功')
@@ -81,23 +124,23 @@ const featuresOptions = ref([
     label: '全部'
   },
   {
-    value: '985,',
+    value: '985',
     label: '985'
   },
   {
-    value: '211,',
+    value: '211',
     label: '211'
   },
   {
-    value: '双一流,',
+    value: '双一流',
     label: '双一流'
   },
   {
-    value: '强基计划,',
+    value: '强基计划',
     label: '强基计划'
   },
   {
-    value: '双高计划,',
+    value: '双高计划',
     label: '双高计划'
   }
 ])
@@ -313,18 +356,26 @@ const typeOptions = ref([
 ])
 
 const suggestions = ref([]);
-
+const establishmentUniversityId = ref(0);
 // 带防抖的搜索建议查询
-const querySearchAsync = debounce(async (queryString, cb) => {
+const querySearchAsync = (handle)=>  debounce(async (queryString, cb) => {
   if (queryString) {
+    const name= ref('')
     try {
-      const Features= universityForm.value.universityFeatures.join(',')
-      const res = await universityApi.selectUniversityListByName(universityFormS.value.universityName, universityFormS.value.universityArea,universityFormS.value.universityLevel,universityFormS.value.universityType,Features,currentPage3.value, pageSize3.value)
-      console.log('获取建议:', res.data.records);
-      suggestions.value = res.data.records.map(item => {
-        return { value: item.universityName, ...item };
-      });
-      cb(suggestions.value);
+      if (handle==='establishmentUniversity') {
+        name.value=addEstablishmentUniversityName.value
+      }else {name.value=universityFormS.value.universityName}
+      console.log('获取建议:', name.value);
+        const Features = universityForm.value.universityFeatures.join(',')
+        const res = await universityApi.selectUniversityListByName(name.value, universityFormS.value.universityArea, universityFormS.value.universityLevel, universityFormS.value.universityType, Features, currentPage3.value, pageSize3.value)
+        console.log('获取建议:', res.data.records);
+        suggestions.value = res.data.records.map(item => {
+          return {value: item.universityName,
+            id:item.universityId,
+            ...item};
+        });
+        cb(suggestions.value);
+
     } catch (error) {
       console.error('获取建议失败:', error);
       cb([]);
@@ -360,18 +411,84 @@ const deleteUniversity = () => {
     ElMessage.error('删除失败')
   })
 }
+
 let handleDeleteDialog = ref(false);
+const deleteEstablishmentUniversityDialog = ref(false);
+const currentDeleteId = ref(null);
+const deleteEstablishmentUniversity = () => {
+  deleteEstablishmentUniversityDialog.value=false
+  major_university.deleteEstablishUniversity(majorId,currentDeleteId.value).then(res => {
+    ElMessage.success('删除成功')
+    select();
+  }).catch(error => {
+    console.error(error);
+    ElMessage.error('删除失败')
+  })
+}
+const addEstablishmentUniversityDialog = ref(false);
+const addEstablishmentUniversityName = ref('');
+const addEstablishmentUniversityNames = ref([]);
+const addEstablishmentUniversityIds = ref([]);
+const handleAddEstablishmentUniversityNames = (item) => {
+ addEstablishmentUniversityNames.value.push(item.value);
+ addEstablishmentUniversityIds.value.push(item.id);
+}
+const addEstablishmentUniversity = () => {
+
+  addEstablishmentUniversityDialog.value=false
+
+  const requestData = {
+    universityIds: addEstablishmentUniversityIds.value,
+    majorId:majorId
+  };
+
+  major_university.insertEstablishUniversity(requestData).then(res => {
+    ElMessage.success('添加成功')
+    select();
+  }).catch(error => {
+    console.error(error);
+    ElMessage.error('添加失败')
+  })
+}
+// 在组件中新增验证规则
+const rules = {
+  universityEmail: [
+    {
+      type: 'email',
+      message: '请输入有效的邮箱地址',
+      trigger: ['blur', 'change']
+    }
+  ],
+  universityPhone: [
+    {
+      pattern: /^(\d{3,4}-)?\d{7,8}$/,
+      message: '请输入有效的电话号码',
+      trigger: ['blur', 'change']
+    }
+  ],
+  universityWebsite: [
+    {
+      pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+      message: '请输入有效的网址',
+      trigger: ['blur', 'change']
+    }
+  ]
+}
+
 </script>
 
 <template>
+
     <el-autocomplete
         v-model="universityFormS.universityName"
-        :fetch-suggestions="querySearchAsync"
+        :fetch-suggestions="querySearchAsync('')"
         placeholder="请输入院校名称"
         @select="handleSearch"
         style="width: 300px; margin: 20px"
     ></el-autocomplete>
     <el-button type="primary" @click="handleSearch">搜索</el-button>
+    <el-button type="primary" v-if="majorId" @click="addEstablishmentUniversityDialog=true">添加开设院校</el-button>
+
 <div>
   <el-select-v2
       v-model="universityFormS.universityArea"
@@ -409,7 +526,15 @@ let handleDeleteDialog = ref(false);
   />
 </div>
 <div v-if="universityList" class="university-block">
-  <div v-for="university in universityList" class="university-block-children" @click="clickUniversity(university)">
+  <div v-for="university in universityList" class="university-block-children" @click="clickUniversity(university)"
+       @mouseenter="hoverUniversityId = university.universityId"
+       @mouseleave="hoverUniversityId = null"
+  >
+    <div v-if="majorId && hoverUniversityId === university.universityId"
+         class="delete-button"
+         @click.stop="currentDeleteId = university.universityId; deleteEstablishmentUniversityDialog=true">
+      ×
+    </div>
     <img :src="serverUrl.url + '/images/university/' + university.universitySchoolbadge"
          alt="校徽"
          style="width: 100px; height: 100px"/> <br>
@@ -422,7 +547,7 @@ let handleDeleteDialog = ref(false);
 </div>
 
   <div v-else>
-    <el-skeleton :rows="5"></el-skeleton>
+    <el-skeleton :rows="50"></el-skeleton>
   </div>
   <el-pagination
       v-model:current-page="currentPage3"
@@ -467,7 +592,21 @@ let handleDeleteDialog = ref(false);
       <el-input v-model="universityForm.universityLevel" placeholder="请输入院校等级"></el-input>
     </el-form-item>
     <el-form-item label="院校类型" prop="universityType">
-      <el-input v-model="universityForm.universityType" placeholder="请输入院校类型"></el-input>
+      <el-input v-model="universityForm.universityType"></el-input>
+    </el-form-item>
+
+    <!-- 新增联系信息 -->
+    <el-form-item label="联系电话" prop="universityPhone">
+      <el-input v-model="universityForm.universityPhone"
+                placeholder="请输入联系电话（可选）"></el-input>
+    </el-form-item>
+    <el-form-item label="联系邮箱" prop="universityEmail">
+      <el-input v-model="universityForm.universityEmail"
+                placeholder="请输入联系邮箱（可选）"></el-input>
+    </el-form-item>
+    <el-form-item label="官方网站" prop="universityWebsite">
+      <el-input v-model="universityForm.universityWebsite"
+                placeholder="请输入官网网址（可选）"></el-input>
     </el-form-item>
     <el-form-item label="院校特色" prop="universityFeatures">
       <el-select-v2
@@ -492,11 +631,33 @@ let handleDeleteDialog = ref(false);
     </div>
   </el-form>
 </el-dialog>
-  <el-dialog title="确认删除吗？" v-model="handleDeleteDialog">
+  <el-dialog title="确认删除院校吗？" v-model="handleDeleteDialog">
     <span slot="footer" class="dialog-footer">
       <el-button @click="handleDeleteDialog=false">取消</el-button>
       <el-button type="primary" @click="deleteUniversity">确认</el-button>
     </span>
+  </el-dialog>
+  <el-dialog title="确认删除专业开设院校吗？" v-model="deleteEstablishmentUniversityDialog">
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="deleteEstablishmentUniversityDialog=false">取消</el-button>
+      <el-button type="primary" @click="deleteEstablishmentUniversity">确认</el-button>
+    </span>
+  </el-dialog>
+  <el-dialog title="添加开设院校" v-model="addEstablishmentUniversityDialog">
+    <el-autocomplete
+        v-model="addEstablishmentUniversityName"
+        :fetch-suggestions="querySearchAsync('establishmentUniversity')"
+        placeholder="请输入院校名称"
+        @select="handleAddEstablishmentUniversityNames"
+        style="width: 300px; margin: 20px"
+    ></el-autocomplete>
+    <el-button type="primary" @click="handleAddEstablishmentUniversityNames">添加</el-button>
+    <el-input-tag v-model="addEstablishmentUniversityNames"
+                  clearable
+                  :trigger="null"
+                  draggable
+    ></el-input-tag>
+    <el-button type="primary" @click="addEstablishmentUniversity">保存</el-button>
   </el-dialog>
 </template>
 
@@ -532,4 +693,20 @@ let handleDeleteDialog = ref(false);
   display: flex;
   justify-content: center;
 }
+.delete-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  background: #f56c6c;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.3s;
+}
+
 </style>

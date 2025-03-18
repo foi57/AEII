@@ -41,5 +41,17 @@ export default {
             url: '/article/delete/' + id,
             method: 'delete',
         })
+    },
+    selectArticlesByCategoryUniversityName(articleType,universityName,pageNum,pageSize) {
+        return request({
+            url: '/article/selectArticlesByCategoryUniversityName',
+            method: 'GET',
+            params: {
+                articleType,
+                universityName,
+                pageNum,
+                pageSize
+            }
+        })
     }
 }

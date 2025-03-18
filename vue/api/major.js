@@ -33,5 +33,14 @@ export default {
             method: 'post',
             data: major
         })
+    },
+    selectMajorListByUniversityId(universityId) {
+        return request({
+            url: '/major/selectMajorListByUniversityId',
+            method: 'get',
+            params: {
+                universityId: universityId,
+            }
+        })
     }
 }

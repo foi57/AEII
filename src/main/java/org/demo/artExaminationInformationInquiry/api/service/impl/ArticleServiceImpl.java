@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -70,15 +71,27 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public Article selectArticleById(Long id) {
-        Article article=  articleMapper.selectById(id);
-        if (article!=null){
+        QueryWrapper<Article> queryWrapper1 = new QueryWrapper<>();
+        queryWrapper1.eq("article_id", id)
+            .select("article_id", "article_title", "article_content",
+                    "article_released", "article_source", "article_type",
+                    "attachments"); // 明确包含attachments字段
+        Article article = articleMapper.selectOne(queryWrapper1);
+
+        if (article != null) {
+            // 补充附件信息处理
+            if (article.getAttachments() == null) {
+                article.setAttachments(Collections.emptyList());
+            }
+            // 补充用户名信息处理
             Users user = usersMapper.selectById(article.getArticleSource());
             if (user!= null) {
-                article.setUserName(user.getUsersName());  // 需要在Article实体类添加userName字段
+                article.setUserName(user.getUsersName());
             }
-            QueryWrapper<ArticleUniversity> queryWrapper=new QueryWrapper<>();
-            queryWrapper.eq("article_id",article.getArticleId());
-            List<ArticleUniversity> articleUniversities=articleUniversityMapper.selectList(queryWrapper);
+            // 保持原有关联院校查询逻辑
+            QueryWrapper<ArticleUniversity> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("article_id", article.getArticleId());
+            List<ArticleUniversity> articleUniversities = articleUniversityMapper.selectList(queryWrapper);
             article.setAffiliatedUniversities(articleUniversities);
         }
         return article;
@@ -113,6 +126,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             oldArticle.setArticleType(articleMap.get("articleType").toString());
             articleUniversityMapper.delete(new QueryWrapper<ArticleUniversity>().eq("article_id",articleId));
             List<?> affiliatedUniversities = (List<?>) articleMap.get("affiliatedUniversities");
+            oldArticle.setAttachments((List<Map<String, String>>) articleMap.get("attachments"));
             if (!affiliatedUniversities.isEmpty()){
                 List<ArticleUniversity> articleUniversities = affiliatedUniversities.stream()
                         .map(universityName -> new ArticleUniversity(articleId, universityName.toString()))
@@ -131,5 +145,20 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                .orderByDesc(Article::getArticleReleased) // 新增排序条件
                .page(page);
         return page;
+    }
+
+    @Override
+    public Page<Article> selectArticleListByUniversityName(String universityName,String articleType, Integer pageNum, Integer pageSize) {
+        return lambdaQuery()
+                // 使用 exists 子查询替代 ID列表查询
+                .exists(
+                        "SELECT 1 FROM article_university au " +
+                                "WHERE au.article_id = article.article_id " +  // 关联主表字段
+                                "AND au.university_name = {0}",
+                        universityName
+                )
+                .like(Article::getArticleType, articleType)
+                .orderByDesc(Article::getArticleReleased)
+                .page(new Page<>(pageNum, pageSize));
     }
 }

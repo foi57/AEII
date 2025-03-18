@@ -33,6 +33,27 @@
                       :trigger="null"
                       draggable></el-input-tag>
       </el-form-item>
+      <el-form-item label="附件">
+        <el-upload
+            class="upload-demo"
+            :action="serverUrl.url + '/api/article/upload/file'"
+            :headers="{ Authorization: `Bearer ${token}` }"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :before-upload="beforeUpload"
+            :file-list="form.affiliatedFiles"
+            :limit="5"
+            accept=".pdf,.doc,.docx,.xls,.xlsx"
+            multiple
+        >
+          <el-button type="primary">点击上传</el-button>
+          <template #tip>
+            <div class="el-upload__tip">
+              支持扩展名：.pdf .doc .docx .xls .xlsx，单个文件不超过10MB
+            </div>
+          </template>
+        </el-upload>
+      </el-form-item>
       <el-form-item >
         <div class="button-block">
         <el-button type="primary" @click="submitForm">立即发布</el-button>
@@ -75,6 +96,30 @@ const route = useRoute()
 const userStore = Store();
 // 需要新建API模块
 
+const token = localStorage.getItem('accessToken')
+
+const handleUploadSuccess = (response, file) => {
+  form.affiliatedFiles.push({
+    name: file.name,
+    url: serverUrl.url + response
+  })
+  console.log('上传成功',form.affiliatedFiles)
+  ElMessage.success('上传成功')
+}
+
+const handleUploadError = () => {
+  ElMessage.error('上传失败，请重试')
+}
+
+const beforeUpload = (file) => {
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('文件大小不能超过10MB')
+    return false
+  }
+  return true
+}
+
 // 编辑器实例
 const editId = route.params.id;
 if (editId) {
@@ -87,7 +132,14 @@ if (editId) {
     for (const item of res.data.affiliatedUniversities){
       form.affiliatedUniversities.push(item.universityName)
     }
-    console.log('关联院校',form.affiliatedUniversities)
+    if (res.data.attachments) {
+      form.affiliatedFiles = res.data.attachments.map(att => ({
+        name: att.name,
+        url: serverUrl.url + att.url // 拼接完整URL
+      }));
+    }
+    console.log('编辑文章',res.data)
+    console.log('编辑文章',form)
   }).catch(err => {
     console.log(err)
     ElMessage.error('获取文章详情失败')
@@ -99,8 +151,11 @@ const toolbarConfig = {
   excludeKeys: [
           // 移除视频相关菜单
     'group-video',
-  ]
+  ],
+
 }
+
+
 const editorConfig = {
   placeholder: '请输入内容...',
   MENU_CONF: {
@@ -122,7 +177,8 @@ const editorConfig = {
       fieldName: 'file',
       maxFileSize: 3 * 1024 * 1024, // 3M
       allowedFileTypes: ['image/*'],
-    }
+    },
+
   }
 }
 
@@ -133,6 +189,7 @@ const form = reactive({
   articleContent: '',
   affiliatedUniversities : [],
   articleSource: userStore.usersId,
+  affiliatedFiles: [] // 存储附件信息{name: '文件名', url: '文件URL'},
 })
 
 // 验证规则
@@ -152,20 +209,28 @@ const categories = [
 
 // 提交表单
 const submitForm = async () => {
-  if (editId) {
-    const data = {
+  try {
+    const submitData = {
       ...form,
-      articleId: editId,
+      attachments: form.affiliatedFiles.map(f => ({
+        name: f.name,
+        url: f.url.replace(serverUrl.url, '') // 存储相对路径
+      }))
     }
-    await article.updateArticle(data);
-  }else {
-    try {
-      await article.publish(form)
-      ElMessage.success('发布成功')
-      resetForm()
-    } catch (error) {
-      ElMessage.error('发布失败')
+
+    if (editId) {
+      await article.updateArticle({
+        ...submitData,
+        articleId: editId
+      })
+    } else {
+      await article.publish(submitData)
     }
+
+    ElMessage.success(editId ? '更新成功' : '发布成功')
+    resetForm()
+  } catch (error) {
+    ElMessage.error(error.message || '操作失败')
   }
 }
 
@@ -174,6 +239,8 @@ const resetForm = () => {
   form.articleTitle = ''
   form.articleType = ''
   form.articleContent = ''
+  form.affiliatedFiles = []
+  form.affiliatedUniversities = []
   if (editor.value) {
     editor.value.clear()
   }
@@ -244,5 +311,16 @@ function debounce(fn, delay) {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.upload-demo {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.el-upload__tip {
+  color: #666;
+  font-size: 12px;
+  margin-top: 5px;
 }
 </style>

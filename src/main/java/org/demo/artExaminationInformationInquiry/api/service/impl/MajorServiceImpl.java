@@ -1,11 +1,14 @@
 package org.demo.artExaminationInformationInquiry.api.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
 import org.demo.artExaminationInformationInquiry.api.mapper.MajorMapper;
 import org.demo.artExaminationInformationInquiry.api.service.IMajorService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>
@@ -32,5 +35,12 @@ public class MajorServiceImpl extends ServiceImpl<MajorMapper, Major> implements
     @Override
     public boolean deleteMajor(Long id) {
         return removeById(id);
+    }
+
+    @Override
+    public List<Major> selectMajorListByUniversityId(Long universityId) {
+        return lambdaQuery()
+                .exists("SELECT 1 FROM university_major mu WHERE mu.major_id = major.major_id AND mu.university_id = {0}", universityId)
+                .list();
     }
 }

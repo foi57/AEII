@@ -143,6 +143,12 @@ const handleDelete = () => {
   })
   handleDeleteDialog.value=false;
 }
+const EstablishmentColleges =() =>{
+  window.open(
+      `${window.location.origin}/major/university/${majorForm.value.majorId}/${majorForm.value.majorName}`,
+      '_blank'
+  )
+}
 </script>
 
 <template>
@@ -209,6 +215,9 @@ const handleDelete = () => {
       </el-form-item>
       <el-form-item label="专业介绍" prop="majorIntroduction">
         <el-input placeholder="请输入专业介绍" v-model="majorForm.majorIntroduction" type="textarea"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="EstablishmentColleges">开设院校</el-button>
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">

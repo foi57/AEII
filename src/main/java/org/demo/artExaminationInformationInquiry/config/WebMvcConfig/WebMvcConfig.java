@@ -13,7 +13,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + System.getProperty("user.dir") + "/file/university/");
         registry.addResourceHandler("/article/images/**")
                .addResourceLocations("file:" + System.getProperty("user.dir") + "/file/article/images/");
-        // 修改为实际存储路径
+        registry.addResourceHandler("/article/files/**")
+              .addResourceLocations("file:" + System.getProperty("user.dir") + "/file/article/files/");
     }
 
 

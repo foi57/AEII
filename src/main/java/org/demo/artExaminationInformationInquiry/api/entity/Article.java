@@ -1,15 +1,21 @@
 package org.demo.artExaminationInformationInquiry.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
+
+import javax.persistence.Column;
+
 /**
  * <p>
  * 
@@ -21,8 +27,9 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@TableName("article")
 @ApiModel(value = "Article对象", description = "")
+@Accessors(chain = true)
+@TableName(autoResultMap = true)
 public class Article implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -50,6 +57,10 @@ public class Article implements Serializable {
 
     @TableField(exist = false) // 表示该字段不存在于数据库表中
     private List<ArticleUniversity> affiliatedUniversities;
+
+    @TableField(value = "attachments", typeHandler = JacksonTypeHandler.class)
+    @Column(columnDefinition = "json")
+    private List<Map<String, String>> attachments;
 
     @TableLogic
     @TableField(value = "deleted",fill = FieldFill.INSERT)

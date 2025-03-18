@@ -1,5 +1,6 @@
 package org.demo.artExaminationInformationInquiry.api.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import net.sf.jsqlparser.expression.DateTimeLiteralExpression;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -7,6 +8,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.demo.artExaminationInformationInquiry.api.entity.Article;
 import org.demo.artExaminationInformationInquiry.api.entity.ArticleUniversity;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleService;
+import org.demo.artExaminationInformationInquiry.api.service.IArticleUniversityService;
 import org.slf4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,8 +42,10 @@ import java.util.UUID;
 public class ArticleController {
 
     IArticleService articleService;
-    ArticleController(IArticleService articleService) {
+    IArticleUniversityService articleUniversityService;
+    ArticleController(IArticleService articleService, IArticleUniversityService articleUniversityService) {
         this.articleService = articleService;
+        this.articleUniversityService = articleUniversityService;
     }
 
     Logger logger=org.slf4j.LoggerFactory.getLogger(ArticleController.class);
@@ -82,18 +87,24 @@ public class ArticleController {
     }
 
     @PostMapping("/insert")
-    public ResponseEntity<String> insertArticle(@RequestBody Map<String,Object> article){
-        logger.debug("article: {}", article);
+    public ResponseEntity<String> insertArticle(@RequestBody Map<String,Object> articleMap) {
+        logger.debug("insertArticle: {}", articleMap);
         Article article1=new Article();
-        article1.setArticleTitle((String) article.get("articleTitle"));
-        article1.setArticleContent((String) article.get("articleContent"));
+        article1.setArticleTitle((String) articleMap.get("articleTitle"));
+        article1.setArticleContent((String) articleMap.get("articleContent"));
         article1.setArticleReleased(LocalDate.now());
-        article1.setArticleSource((Integer) article.get("articleSource"));
-        article1.setArticleType((String) article.get("articleType"));
-        String[] affiliatedUniversities = ((List<?>) article.get("affiliatedUniversities"))
-                .stream()
-                .map(Object::toString)
-                .toArray(String[]::new);
+        article1.setArticleSource((Integer) articleMap.get("articleSource"));
+        article1.setArticleType((String) articleMap.get("articleType"));
+        article1.setAttachments((List<Map<String, String>>) articleMap.get("attachments"));
+        List<?> affiliatedUniversitiesList = (List<?>) articleMap.get("affiliatedUniversities");
+        String[] affiliatedUniversities=null;
+        if (affiliatedUniversitiesList != null && !affiliatedUniversitiesList.isEmpty()) {
+             affiliatedUniversities = (affiliatedUniversitiesList)
+                    .stream()
+                    .map(Object::toString)
+                    .toArray(String[]::new);
+        }
+
 
         try {
             articleService.insertArticle(article1,affiliatedUniversities);
@@ -107,7 +118,10 @@ public class ArticleController {
     @PostMapping("/select")
     public ResponseEntity<Page<Article>> selectArticle(@RequestBody Map<String,Object> article){
         String articleTitle=(String) article.get("articleTitle");
-        Long universityId = ((Number) article.get("articleSource")).longValue();
+        long universityId= -1L;
+        if (article.get("articleSource") !=null) {
+            universityId = ((Number) article.get("articleSource")).longValue();
+        }
         String articleType=(String) article.get("articleType");
         int pageNum=(Integer) article.get("pageNum");
         int pageSize=(Integer) article.get("pageSize");
@@ -119,8 +133,10 @@ public class ArticleController {
         }
     }
     @GetMapping("/detail/{id}")
-    public ResponseEntity<Article> selectArticleDetail(@PathVariable("id") Long id){
-        return ResponseEntity.ok(articleService.selectArticleById(id));
+    public ResponseEntity<Article> selectArticleDetail(@PathVariable Long id) {
+        Article article = articleService.selectArticleById(id); // 改用服务层方法
+        logger.debug("articleDetail: {}", article);
+        return ResponseEntity.ok(article);
     }
     @PostMapping("/update")
     public ResponseEntity<String> updateArticle(@RequestBody Map<String,Object> article){
@@ -133,5 +149,33 @@ public class ArticleController {
         articleService.removeById(id);
         return ResponseEntity.ok("ok");
     }
-
+    @GetMapping("/selectArticlesByCategoryUniversityName")
+    public Page<Article> selectArticlesByUniversity(@RequestParam String universityName,@RequestParam String articleType,@RequestParam Integer pageNum,@RequestParam Integer pageSize) {
+        logger.debug("universityName: {} articleType: {} pageNum: {} pageSize: {}", universityName, articleType, pageNum, pageSize);
+        return articleService.selectArticleListByUniversityName(universityName,articleType,pageNum,pageSize);
+    }
+    @PostMapping("/upload/file")
+    public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file) {
+        logger.debug("uploadFile: {}", file);
+        try {
+            // 获取项目根路径
+            String uploadDir = System.getProperty("user.dir") + "/file/article/files/";
+            // 创建目录（如果不存在）
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String ext = FilenameUtils.getExtension(originalFilename);
+            String fileName = originalFilename + UUID.randomUUID().toString() + "." + ext;
+            // 保存文件
+            Path targetPath = Paths.get(uploadDir, fileName);
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return ResponseEntity.ok("/article/files/" + fileName);
+        }catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("文件上传失败");
+        }
+    }
 }
