@@ -20,7 +20,7 @@ const form = ref({
   password: ''
 })
 const onSubmit = () => {
-  admin.adminLogin(form.value.userName,form.value.password).then(res => {
+  admin.login(form.value.userName,form.value.password).then(res => {
      ElMessage({
        type: 'success',
        message: '登录成功'

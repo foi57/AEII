@@ -1,8 +1,14 @@
 <script setup>
-import {ref} from "vue";
+import {ref,computed} from "vue";
 import userApi from "../../api/user.js";
 import {Store} from "../store/index.js";
 import {ElMessage} from "element-plus";
+import {UserFilled} from "@element-plus/icons-vue";
+import serverUrl from "../../serverUrl.js";
+import 'vue-cropper/dist/index.css'
+import {VueCropper} from "vue-cropper";
+import Header from "./header.vue";
+
 const userStore = Store();
 const userName = userStore.usersName;
 const user =ref(null);
@@ -17,7 +23,10 @@ const userForm = ref({
   password: '',
   email: '',
   phone: '',
-  role: ''
+  role: '',
+  avatar: computed(() => {
+    return userStore.usersAvatar
+  })
 })
 const rules = {
   userName: [
@@ -36,6 +45,8 @@ const rules = {
 const handleEditDialog = ref(false);
 let handlePasswordDialog = ref(false);
 const updateUser = () => {
+  userStore.setAvatar(newAvatarUrl.value)
+  console.log('更新后头像',userStore.usersAvatar)
   userApi.updateUser(userForm.value).then(res => {
     ElMessage.success('编辑成功')
     handleEditDialog.value = false;
@@ -89,11 +100,76 @@ const updatePassword = () => {
     handlePasswordDialog.value = false;
   }).catch(err => ElMessage.error('修改失败'))
 }
+const srcList = [
+  `${serverUrl.url}/users/avatar/${userForm.value.avatar}`
+]
+
+const cropVisible = ref(false)
+const cropper = ref(null)
+const cropFile = ref(null) // 存储原始文件
+
+// 修改原beforeAvatarUpload方法
+const beforeAvatarUpload = (rawFile) => {
+  // 暂存原始文件
+  cropFile.value = rawFile
+  // 打开裁剪弹窗
+  cropVisible.value = true
+  return false // 阻止自动上传
+}
+
+const newAvatarUrl = ref('') // 存储裁剪后的图片URL
+
+// 新增裁剪确认方法
+const confirmCrop = () => {
+  cropper.value.getCropBlob(async (blob) => {
+    const formData = new FormData()
+    formData.append('file', new File([blob], cropFile.value.name, {
+      type: blob.type,
+      lastModified: Date.now()
+    }))
+    formData.append('id', userForm.value.id)
+    console.log('formData',formData)
+    userApi.updateAvatar(formData).then(res => {
+      ElMessage.success('头像上传成功')
+      newAvatarUrl.value = res.data
+      console.log('newAvatarUrl',newAvatarUrl.value)
+      cropVisible.value = false
+    })
+  })
+}
+const createURL = () => {
+  if (!cropFile.value || !(cropFile.value instanceof Blob)) {
+    console.error('无效的文件对象', cropFile.value);
+    return '';
+  }
+  try {
+    return URL.createObjectURL(cropFile.value);
+  } catch (error) {
+    console.error('URL生成失败:', error);
+    return '';
+  }
+}
+
+const onCropperReady = () => {
+  console.log('裁剪器初始化完成')
+  cropper.value?.setAspectRatio(1) // 强制设置1:1比例
+}
 </script>
 
 <template>
+
   <div v-if="user">
-    <el-descriptions title="用户信息">
+    <el-descriptions title="用户信息"
+    direction="vertical">
+      <el-descriptions-item label="头像" :rowspan="2">
+        <el-image :src="`${serverUrl.url}/users/avatar/${userForm.avatar}`" style="max-width: 100px"  :preview-src-list="srcList">
+        <template #error>
+        <div class="image-slot">
+          <el-icon :size="30"><user-filled></user-filled></el-icon>
+        </div>
+      </template>
+        </el-image>
+      </el-descriptions-item>
       <el-descriptions-item label="用户名">{{user[0].usersName}}</el-descriptions-item>
       <el-descriptions-item label="邮箱">{{user[0].usersEmail}}</el-descriptions-item>
       <el-descriptions-item label="电话">{{user[0].usersPhone}}</el-descriptions-item>
@@ -118,6 +194,49 @@ const updatePassword = () => {
   }">修改密码</el-button></div>
   <el-dialog title="编辑用户" v-model="handleEditDialog">
     <el-form  :model="userForm" :rules="rules" ref="formRef">
+      <el-form-item>
+        <el-image v-if="newAvatarUrl === ''" :src="`${serverUrl.url}/users/avatar/${userForm.avatar}`" style="max-width: 100px"  :preview-src-list="srcList">
+          <template #error>
+            <div class="image-slot">
+              <el-icon :size="30"><user-filled></user-filled></el-icon>
+            </div>
+          </template>
+        </el-image>
+        <el-image v-if="newAvatarUrl !== ''" :src="`${serverUrl.url}/users/avatar/${newAvatarUrl}`" style="max-width: 100px"  :preview-src-list="srcList">
+          <template #error>
+            <div class="image-slot">
+              <el-icon :size="30"><user-filled></user-filled></el-icon>
+            </div>
+          </template>
+        </el-image>
+        <!-- 新增裁剪弹窗 -->
+        <el-dialog v-model="cropVisible" title="裁剪头像" width="800px">
+          <vue-cropper
+            v-if="cropFile !==null"
+            ref="cropper"
+            :img="cropFile ? createURL() : ''"
+            :autoCrop="true"
+            :fixed="true"
+            :fixedNumber="[1, 1]"
+            :ready="onCropperReady"
+            style="width: 100%; height: 600px"
+          />
+          <template #footer>
+            <el-button @click="cropVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmCrop">确认上传</el-button>
+          </template>
+        </el-dialog>
+
+        <!-- 修改原上传组件 -->
+        <el-upload
+          class="avatar-uploader"
+          :before-upload="beforeAvatarUpload"
+          :show-file-list="false"
+          accept="image/*"
+        >
+          <el-button size="small" type="primary">更新头像</el-button>
+        </el-upload>
+      </el-form-item>
       <el-form-item label="用户ID" prop="id" v-if="false">
         <el-input placeholder="请输入用户ID" v-model="userForm.id" disabled></el-input>
       </el-form-item>

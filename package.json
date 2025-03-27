@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "@wangeditor/editor": "^5.1.23",
-    "@wangeditor/editor-for-vue": "^5.1.12"
+    "@wangeditor/editor-for-vue": "^5.1.12",
+    "element-plus": "^2.9.7",
+    "vue-cropper": "^0.6.5"
   }
 }

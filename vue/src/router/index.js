@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import administratorLogin from '../views/administratorLogin.vue'
 import { Store } from '../store/index.js'
+import {ElMessage} from "element-plus";
 
 const routes = [
   {
@@ -45,7 +46,7 @@ const routes = [
   {
     path: '/university'
    ,name: 'university',
-    component: () => import('../components/university/universityList.vue')
+    component: () => import('../views/university.vue')
   },
   {
     path: '/university/detail/:id',
@@ -67,6 +68,31 @@ const routes = [
     name: 'UniversityArticles',
     component: () => import('../views/articles.vue'),
     props: true
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('../views/login.vue')
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/register.vue')
+  },
+  {
+    path: '/user',
+    name: 'user',
+    component: () => import('../views/user.vue')
+  },
+  {
+    path: '/collection',
+    name: 'collection',
+    component: () => import('../components/collection.vue')
+  },
+  {
+    path: '/notification',
+    name: 'notification',
+    component: () => import('../views/Notification.vue')
   }
 ];
 
@@ -79,12 +105,25 @@ const router= createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = Store()
   const isAuthenticated = localStorage.getItem('accessToken') && userStore.usersName
+  const userRole = userStore.usersRole // 从 store 获取用户角色
 
-  // 修复2：增加已登录时访问登录页的重定向
+  // 需要管理员权限的路由
+  const adminRoutes = ['/adminIndex', '/adminLogin'] // 添加其他需要控制的管理路由
+
+  if (adminRoutes.includes(to.path)) {
+    if (!isAuthenticated) {
+      return next('/adminLogin')
+    }
+    // 新增角色校验
+    if (!['admin', 'seniorAdmin'].includes(userRole)) {
+      ElMessage.error('权限不足')
+      return next('/userIndex') // 保持当前页面
+    }
+  }
+
+  // 原有登录状态校验保持不变
   if (to.path === '/adminLogin' && isAuthenticated) {
     next('/adminIndex')
-  } else if (to.path === '/adminIndex' && !isAuthenticated) {
-    next('/adminLogin')
   } else {
     next()
   }

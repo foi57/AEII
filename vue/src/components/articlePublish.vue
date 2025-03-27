@@ -72,6 +72,7 @@
             v-model="form.articleContent"
             :defaultConfig="editorConfig"
             @onCreated="handleEditorCreated"
+              :key="editorKey"
           />
         </div>
       </el-form-item>
@@ -84,17 +85,17 @@
 <script setup>
 
 import '@wangeditor/editor/dist/css/style.css'
-import { ref, reactive, shallowRef } from 'vue'
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import {ElMessage, EVENT_CODE} from 'element-plus'
+import {onBeforeUnmount, reactive, ref, shallowRef,nextTick} from 'vue' // 新增生命周期钩子
+import {Editor, Toolbar} from '@wangeditor/editor-for-vue'
+import {ElMessage} from 'element-plus'
 import article from '../../api/article.js'
 import serverUrl from "../../serverUrl.js";
 import universityApi from "../../api/university.js";
 import {Store} from "../store/index.js";
 import {useRoute} from "vue-router";
+
 const route = useRoute()
 const userStore = Store();
-// 需要新建API模块
 
 const token = localStorage.getItem('accessToken')
 
@@ -146,7 +147,21 @@ if (editId) {
   })
 }
 const universityName = ref('');
+
 const editor = shallowRef()
+
+const handleEditorCreated = (editorInstance) => {
+  editor.value = editorInstance
+}
+
+onBeforeUnmount(() => {
+  if (editor.value) {
+    editor.value.destroy()
+    editor.value = null
+  }
+})
+
+
 const toolbarConfig = {
   excludeKeys: [
           // 移除视频相关菜单
@@ -157,6 +172,7 @@ const toolbarConfig = {
 
 
 const editorConfig = {
+  scroll: true,
   placeholder: '请输入内容...',
   MENU_CONF: {
     uploadImage: {
@@ -210,6 +226,9 @@ const categories = [
 // 提交表单
 const submitForm = async () => {
   try {
+
+    form.articleContent = editor.value.getHtml()
+
     const submitData = {
       ...form,
       attachments: form.affiliatedFiles.map(f => ({
@@ -223,34 +242,43 @@ const submitForm = async () => {
         ...submitData,
         articleId: editId
       })
+
     } else {
       await article.publish(submitData)
+      resetForm()
     }
 
     ElMessage.success(editId ? '更新成功' : '发布成功')
-    resetForm()
+
   } catch (error) {
+    console.error(error)
     ElMessage.error(error.message || '操作失败')
+  }finally {
+    if (editor.value) {
+      editor.value.restoreSelection() // 保持选区状态
+    }
   }
 }
 
-// 重置表单
+
+const editorKey = ref(0)
+
 const resetForm = () => {
   form.articleTitle = ''
   form.articleType = ''
   form.articleContent = ''
   form.affiliatedFiles = []
   form.affiliatedUniversities = []
-  if (editor.value) {
-    editor.value.clear()
-  }
-  form.universityId = '';
+  form.universityId = ''
+  // if (editor.value) {
+  //   nextTick(() => {
+  //     editor.value.destroy()
+  //     editor.value = null
+  //     // 通过 key 变化强制重新创建编辑器
+  //     editorKey.value++
+  //   })
+  // }
 }
-const handleEditorCreated = (editorInstance) => {
-  editor.value = editorInstance  // 确保正确接收编辑器实例
-}
-
-
 
 const querySearchAsync = debounce(async (queryString, cb) => {
   if (queryString) {

@@ -3,12 +3,14 @@ import universityApi from "../../api/university.js";
 import {useRoute} from "vue-router";
 import {ref} from "vue";
 import serverUrl from "../../serverUrl.js";
-import {Connection, Iphone, Link, Location, Message, OfficeBuilding, Trophy} from "@element-plus/icons-vue";
+import {Connection, Iphone, Link, Location, Message, OfficeBuilding, StarFilled, Trophy} from "@element-plus/icons-vue";
 import article from "../../api/article.js";
 import major from "../../api/major.js";
-import Articles from "./articles.vue";
-import {ElLoading} from "element-plus";
-
+import {ElLoading, ElMessage} from "element-plus";
+import Header from "../components/header.vue";
+import universityCollection from "../../api/universityCollection.js";
+import {Store} from "../store/index.js";
+const userStore = Store()
 const route = useRoute();
 const universityId = route.params.id;
 const university = ref({
@@ -65,9 +67,48 @@ const handleChange = async () => {
 const isLoading = ref(false)
 const error = ref(null)
 
+const hadCollect = ref(false)
+
+const collect = async () => {
+  if(hadCollect.value) {
+    const collectFormData = new FormData()
+    collectFormData.append('usersId',userStore.usersId)
+    collectFormData.append('universityId',universityId)
+    await universityCollection.delete(collectFormData).then(res => {
+      hadCollect.value = false
+    }).catch(err => {
+      ElMessage.error('取消收藏失败')
+    })
+  }else {
+    const collectFormData = new FormData()
+    collectFormData.append('usersId',userStore.usersId)
+    collectFormData.append('universityId',universityId)
+    await universityCollection.collect(collectFormData).then(res => {
+      hadCollect.value = true
+      ElMessage.success('收藏成功,当院校有新消息会通知你')
+    }).catch(err => {
+      ElMessage.error('收藏失败')
+    })
+  }
+}
+
+
+
+const selectCollection = async () => {
+  const collectFormData = new FormData()
+  collectFormData.append('usersId',userStore.usersId)
+  collectFormData.append('universityId',universityId)
+  await universityCollection.selectCollectionByUserIdUniversityId(collectFormData).then(res => {
+    if(res.data) {
+     hadCollect.value = true
+    }
+  })
+}
+selectCollection()
 </script>
 
 <template>
+  <Header></Header>
   <div class="university-detail-container">
     <el-row :gutter="20">
       <!-- 校徽和基本信息 -->
@@ -83,6 +124,14 @@ const error = ref(null)
             <p><el-icon><Location /></el-icon> 地区：{{ university.universityArea }}</p>
             <p><el-icon><Trophy /></el-icon> 等级：{{ university.universityLevel }}</p>
             <p><el-icon><OfficeBuilding /></el-icon> 类型：{{ university.universityType }}</p>
+
+            <el-button
+              @click="collect"
+              :type="hadCollect ? 'warning' : 'primary'"
+              :icon="StarFilled"
+            >
+              {{ hadCollect ? '已收藏' : '收藏' }}
+            </el-button>
 
             <!-- 新增联系信息 -->
             <div class="contact-info" v-if="university.universityPhone || university.universityEmail || university.universityWeb">
@@ -287,4 +336,13 @@ const error = ref(null)
   position: relative;
   left: 100px;
 }
+.el-row{
+  margin-bottom: 20px;
+}
+
+.el-button--warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+}
+
 </style>

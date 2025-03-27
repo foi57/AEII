@@ -1,7 +1,7 @@
 import request from "../request.js";
 
 export default {
-    adminLogin(userName, password) {
+    login(userName, password) {
         return request({
             url: '/users/login',
             method: 'post',
@@ -29,6 +29,17 @@ export default {
             method: 'get',
             params: {
                 name: name
+            }
+        })
+    },
+    selectUserByNamePage(name, page, size) {
+        return request({
+            url: '/users/selectByNamePage',
+            method: 'get',
+            params: {
+                name: name,
+                page: page,
+                size: size
             }
         })
     },
@@ -85,6 +96,14 @@ export default {
                 name: name,
                 password: password
             }
+        })
+    },
+    updateAvatar(formData){
+
+        return request({
+            url: '/users/uploadAvatar',
+            method: 'post',
+            data: formData
         })
     }
 }

@@ -1,9 +1,16 @@
 <script setup>
 import article from "../../api/article.js";
 import {reactive, ref, toRefs} from "vue";
-import * as loadingInstance from "element-plus/es/components/notification/src/notify";
 import {ElLoading} from "element-plus";
-
+import {Store} from "../store/index.js";
+import {ArrowDown, UserFilled} from "@element-plus/icons-vue";
+import serverUrl from "../../serverUrl.js";
+import Header from "../components/header.vue";
+const userStore = Store();
+const userAvatar = userStore.usersAvatar;
+const userName = userStore.usersName;
+console.log('用户名',userName);
+console.log('头像',userAvatar);
 const form = reactive({
   articleTitle: '',
   articleType: '',
@@ -14,7 +21,6 @@ const form = reactive({
 // 添加加载状态
 const isLoading = ref(false)
 const error = ref(null)
-
 let latestArticle = ref([])
 let noticeArticle = ref([])
 let admissionsInformationArticle = ref([])
@@ -103,16 +109,26 @@ loadNotice()
 loadAdmissions()
 loadPolicy()
 loadGuide()
-
+const handleCommand = (command) => {
+  if (command === 'c') {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    userStore.$reset()
+    window.location.href = '/login'
+  }
+  else if (command === 'd') {
+    window.location.href = '/login'
+  }
+  else if (command === 'a') {
+    window.location.href = '/user'
+  }
+}
 </script>
 
 <template>
   <el-container>
     <el-header>
-      <ul class="menu">
-        <li><el-link href="/university">学校查询</el-link></li>
-        <li><el-link href="/major">艺术类专业</el-link></li>
-      </ul>
+      <Header/>
     </el-header>
     <el-main>
       <el-row>
@@ -224,11 +240,11 @@ loadGuide()
   height: 500px;
   width: 500px;
   box-sizing: border-box;
+  position: relative; /* 新增定位属性 */
 }
 
 /* 方案2：单独设置每个区块 */
 .latestArticle-block {
-  background-color: #f8f9fa;
   border: 1px solid #e9ecef;
 }
 
@@ -287,14 +303,32 @@ loadGuide()
   list-style: none;
   margin: 0;
   display: flex;
-  justify-content: center;
-  align-items: center; /* 垂直居中 */ /* 背景颜色 */
-  border-radius: 8px; /* 圆角 */
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); /* 阴影效果 */
-  background-color:  rgb(148.6, 212.3, 117.1); /* 背景颜色 */
-  padding: 10px 20px; /* 内边距 */
+  justify-content: center; /* 改为左对齐 */
+  align-items: center; /* 垂直居中 */
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  background-color: rgb(148.6, 212.3, 117.1);
+  padding: 10px 20px;
+  flex-grow: 1; /* 允许菜单项扩展 */
+}
+
+
+.el-header {
+  display: flex; /* 关键属性 */
+  justify-content: space-between; /* 左右分布 */
+  align-items: center; /* 垂直居中 */
+  padding: 0 30px; /* 添加水平内边距 */
 }
 .menu li {
   margin: 0 15px; /* 列表项之间的间距 */
+}
+.avatar svg{
+  height: 40px;
+  width: 40px;
+}
+.avatar-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 20px;
 }
 </style>

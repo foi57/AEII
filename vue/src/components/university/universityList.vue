@@ -6,6 +6,7 @@ import {Store} from "../../store/index.js";
 import {ElMessage, ElSelectV2} from "element-plus";
 import {useRoute} from "vue-router";
 import major_university from "../../../api/major_university.js";
+import Header from "../header.vue";
 
 const props = defineProps({
   majorId: {
@@ -356,7 +357,6 @@ const typeOptions = ref([
 ])
 
 const suggestions = ref([]);
-const establishmentUniversityId = ref(0);
 // 带防抖的搜索建议查询
 const querySearchAsync = (handle)=>  debounce(async (queryString, cb) => {
   if (queryString) {
@@ -478,7 +478,6 @@ const rules = {
 </script>
 
 <template>
-
     <el-autocomplete
         v-model="universityFormS.universityName"
         :fetch-suggestions="querySearchAsync('')"

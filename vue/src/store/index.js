@@ -16,7 +16,7 @@ export const Store = defineStore('user', {
             {
                 key: 'userStore',
                 storage: localStorage,
-                paths: ['usersId', 'usersName', 'usersRole'] // 指定需要持久化的字段
+                paths: ['usersId', 'usersName', 'usersRole','usersAvatar'] // 指定需要持久化的字段
             }
         ]
     },
@@ -31,7 +31,11 @@ export const Store = defineStore('user', {
                 this.usersStatus = userData.usersStatus;
                 this.usersCreateTime = userData.usersCreationTime; // 注意字段名对应
             },
+            setAvatar(avatar) {
+                this.usersAvatar = avatar;
+            }
         },
+
     getters: {
         getUserId: (state) => state.userId,
         getUsersAvatar: (state) => state.usersAvatar,

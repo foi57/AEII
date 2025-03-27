@@ -3,7 +3,10 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import article from '../../api/article.js'
 import { ElCard, ElLink } from 'element-plus' // 新增导入组件
-import serverUrl from "../../serverUrl.js"; // 新增服务器地址配置
+import serverUrl from "../../serverUrl.js";
+import Header from "../components/header.vue";
+import Comment from "../components/comment.vue";
+import comments from "../../api/comments.js"; // 新增服务器地址配置
 
 const route = useRoute()
 const articleDetail = ref({})
@@ -16,9 +19,12 @@ onMounted(async () => {
     console.error('获取文章详情失败:', err)
   }
 })
+
+
 </script>
 
 <template>
+  <Header/>
   <div class="article-container">
     <h1>{{ articleDetail.articleTitle }}</h1>
     <div class="meta-info">
@@ -45,6 +51,12 @@ onMounted(async () => {
         </el-link>
       </div>
     </el-card>
+  </div>
+  <div>
+    <h3>交流区</h3>
+    <div class="comment-section">
+      <comment/>
+    </div>
   </div>
 </template>
 

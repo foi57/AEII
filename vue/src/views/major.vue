@@ -2,6 +2,7 @@
 import {ref} from 'vue'
 import majorApi from '../../api/major.js'
 import router from '../router/index.js'
+import Header from "../components/header.vue";
 
 // 专业列表数据
 const majorList = ref([])
@@ -34,6 +35,7 @@ loadMajors()
 </script>
 
 <template>
+  <Header/>
   <div class="major-container">
     <!-- 搜索栏 -->
     <div class="search-bar">

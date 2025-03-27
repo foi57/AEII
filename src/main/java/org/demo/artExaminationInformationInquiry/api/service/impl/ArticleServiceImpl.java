@@ -2,21 +2,17 @@ package org.demo.artExaminationInformationInquiry.api.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.demo.artExaminationInformationInquiry.api.entity.Article;
-import org.demo.artExaminationInformationInquiry.api.entity.ArticleUniversity;
-import org.demo.artExaminationInformationInquiry.api.entity.Users;
+import org.demo.artExaminationInformationInquiry.api.entity.*;
 import org.demo.artExaminationInformationInquiry.api.mapper.ArticleMapper;
 import org.demo.artExaminationInformationInquiry.api.mapper.ArticleUniversityMapper;
+import org.demo.artExaminationInformationInquiry.api.mapper.UniversityCollectionMapper;
 import org.demo.artExaminationInformationInquiry.api.mapper.UsersMapper;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,19 +28,54 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     private final UsersMapper usersMapper;
     private final ArticleMapper articleMapper;
     private final ArticleUniversityMapper articleUniversityMapper;
-    ArticleServiceImpl(ArticleMapper articleMapper,ArticleUniversityMapper articleUniversityMapper,UsersMapper usersMapper){
+    private final UniversityCollectionServiceImpl universityCollectionService;
+    private final NotificationServiceImpl notificationService;
+    private final UniversityServiceImpl universityService;
+    private final NotificationUsersServiceImpl notificationUsersService;
+    ArticleServiceImpl(ArticleMapper articleMapper,ArticleUniversityMapper articleUniversityMapper,UsersMapper usersMapper,UniversityCollectionServiceImpl universityCollectionService,NotificationServiceImpl notificationService,UniversityServiceImpl universityService
+    ,NotificationUsersServiceImpl notificationUsersService){
         this.articleMapper=articleMapper;
         this.articleUniversityMapper=articleUniversityMapper;
         this.usersMapper=usersMapper;
+        this.universityCollectionService=universityCollectionService;
+        this.notificationService=notificationService;
+        this.universityService=universityService;
+        this.notificationUsersService=notificationUsersService;
     }
     @Transactional
     @Override
     public void insertArticle(Article article, String[] affiliatedUniversities) {
         articleMapper.insert(article);
         Long articleId=article.getArticleId();
+        List<ArticleUniversity> articleUniversities = null;
         if (articleId!=null && affiliatedUniversities!=null){
-           List<ArticleUniversity> articleUniversities= Arrays.stream(affiliatedUniversities).map(universityName -> new ArticleUniversity(articleId, universityName)).toList();
+           articleUniversities= Arrays.stream(affiliatedUniversities).map(universityName -> new ArticleUniversity(articleId, universityName)).toList();
            articleUniversityMapper.batchInsert(articleUniversities);
+        }
+        if (affiliatedUniversities != null) {
+            List<Long> UniversityIds= Arrays.stream(affiliatedUniversities).map(name -> universityService.selectUniversityByName(name).getUniversityId()).toList();
+            List<UniversityCollection> universityCollections = universityCollectionService.lambdaQuery().in(UniversityCollection::getUniversityId, UniversityIds).list();
+            List<Notification> notifications = universityCollections.stream()
+                    .map(uc -> new Notification()
+                            .setUserId(uc.getUsersId())
+                            .setContent(article.getArticleTitle())
+                            .setLink("/article/detail/" + article.getArticleId())
+                            .setCategory("article"))
+                    .toList();
+
+            // 修改后正确代码：
+            List<Notification> savedNotifications = new ArrayList<>();
+            for (Notification notification : notifications) {
+                notificationService.save(notification); // 单条保存以获取主键
+                savedNotifications.add(notification);
+            }
+
+            List<NotificationUsers> notificationUsers = savedNotifications.stream()
+                   .map(n -> new NotificationUsers()
+                           .setNotificationId(n.getNotificationId()) // 此时已获得数据库生成的主键
+                           .setUserId(n.getUserId()))
+                   .toList();
+            notificationUsersService.saveBatch(notificationUsers);
         }
     }
 

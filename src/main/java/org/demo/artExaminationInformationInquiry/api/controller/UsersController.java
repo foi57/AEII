@@ -1,5 +1,6 @@
 package org.demo.artExaminationInformationInquiry.api.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.Param;
 import org.demo.artExaminationInformationInquiry.api.entity.Users;
 import org.demo.artExaminationInformationInquiry.api.service.IUsersService;
@@ -8,10 +9,17 @@ import org.demo.artExaminationInformationInquiry.util.UsersUtil;
 import org.slf4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * <p>
@@ -128,5 +136,25 @@ public class UsersController {
          logger.error("更新失败");
          return ResponseEntity.status(400).body("更新失败");
       }
+   }
+   @PostMapping("/uploadAvatar")
+   public ResponseEntity<String> updateAvatar( @RequestParam("id") Long id,
+                                               @RequestParam("file") MultipartFile file){
+      try {
+         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+         Path uploadPath = Paths.get(System.getProperty("user.dir") + "\\file\\user\\");
+         Files.createDirectories(uploadPath);
+         Files.copy(file.getInputStream(), uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+         usersService.lambdaUpdate().eq(Users::getUsersId,id).set(Users::getUsersAvatar,fileName).update();
+         return ResponseEntity.ok(fileName);
+      } catch (IOException e) {
+          throw new RuntimeException(e);
+      }
+   }
+   @GetMapping("/selectByNamePage")
+   public ResponseEntity<Page<Users>> selectByNamePage(@RequestParam("name") String name, @RequestParam("page") Integer pageNum, @RequestParam("size") Integer pageSize){
+       logger.debug("name:{}pageNum:{}pageSize:{}", name, pageNum, pageSize);
+      Page<Users> usersPage=usersService.selectUsersByNamePage(name,pageNum,pageSize);
+      return ResponseEntity.ok(usersPage);
    }
 }

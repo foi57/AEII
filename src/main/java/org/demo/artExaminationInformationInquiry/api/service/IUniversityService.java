@@ -19,4 +19,5 @@ public interface IUniversityService extends IService<University> {
     Page<University> selectUniversityListByName(String name, int pageNum, int pageSize);
     Page<University> selectUniversityList(String name, String area,String type,String level,String features,int pageNum, int pageSize);
     Page<University> selectAffiliatedUniversityList(Long majorId,String name, String area,String type,String level,String features,int pageNum, int pageSize);
+    University selectUniversityByName(String name);
 }

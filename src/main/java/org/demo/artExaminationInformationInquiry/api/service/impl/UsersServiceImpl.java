@@ -1,6 +1,7 @@
 package org.demo.artExaminationInformationInquiry.api.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Users;
 import org.demo.artExaminationInformationInquiry.api.mapper.UsersMapper;
 import org.demo.artExaminationInformationInquiry.api.service.IUsersService;
@@ -72,5 +73,13 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     }
     public void updatePassword(String usersName, String usersPassword){
         lambdaUpdate().eq(Users::getUsersName, usersName).set(Users::getUsersPassword, usersPassword).update();
+    }
+
+    @Override
+    public Page<Users> selectUsersByNamePage(String usersName, int pageNum, int pageSize) {
+        Page<Users> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<Users> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("users_name", usersName);
+        return lambdaQuery().page(page);
     }
 }

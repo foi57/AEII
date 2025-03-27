@@ -47,6 +47,8 @@ public class UniversityServiceImpl extends ServiceImpl<UniversityMapper, Univers
         Page<University> page = new Page<>(pageNum, pageSize);
         return lambdaQuery().in(University::getUniversityId,  universityIdList).like(University::getUniversityName, name).like(University::getUniversityArea, area).like(University::getUniversityType, type).like(University::getUniversityLevel, level).like(University::getUniversityFeatures, features).page(page);
     }
-
-
+    @Override
+    public University selectUniversityByName(String name){
+        return lambdaQuery().eq(University::getUniversityName,name).one();
+    }
 }

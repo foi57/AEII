@@ -3,6 +3,7 @@ import {ref} from "vue";
 import major from "../../api/major.js";
 import {useRoute} from "vue-router";
 import UniversityList from "../components/university/universityList.vue";
+import Header from "../components/header.vue";
 const route = useRoute()
 const majorName = route.params.name
 const majorList = ref()
@@ -16,6 +17,7 @@ loadDate()
 </script>
 
 <template>
+  <Header></Header>
 <div>
   <el-row v-if="majorList">
     <el-col :span="5">

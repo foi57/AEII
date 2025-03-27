@@ -1,5 +1,6 @@
 package org.demo.artExaminationInformationInquiry.api.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Users;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -25,4 +26,5 @@ public interface IUsersService extends IService<Users> {
     void deleteUser(Long id);
     String selectPassword(String usersName);
     void updatePassword(String usersName, String usersPassword);
+    Page<Users> selectUsersByNamePage(String usersName, int pageNum, int pageSize);
 }
