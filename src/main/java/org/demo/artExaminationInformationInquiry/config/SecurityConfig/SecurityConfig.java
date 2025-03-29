@@ -35,7 +35,7 @@ public class SecurityConfig{
             .authorizeHttpRequests(authorize -> authorize
                     .requestMatchers("/api/users/delete").hasAnyRole("seniorAdmin")
                     .requestMatchers("/api/university/uploadImg","/api/article/upload/image").hasAnyRole("seniorAdmin","admin")
-                    .requestMatchers("/api/users/login","/api/users/register","/auth/refresh","/images/university/**","/article/images/**","/article/files/**","/api/article/select","/users/avatar/**").permitAll()
+                    .requestMatchers("/api/users/login","/api/users/register","/auth/refresh","/images/university/**","/article/images/**","/article/files/**","/api/article/select","/users/avatar/**","/comments/images/**").permitAll()
 
                     .anyRequest().authenticated()
            )

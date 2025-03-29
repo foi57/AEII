@@ -2,7 +2,7 @@ import request from "../request.js";
 export default {
     insertComment(data) {
         return request({
-            url: '/comment/insert',
+            url: '/comments/insert',
             method: 'post',
             data
         })
@@ -15,4 +15,11 @@ export default {
             data: formData,
         })
     },
+    selectCommentList(data) {
+        return request({
+            url: '/comments/selectListByArticleId',
+            method: 'post',
+            data
+        })
+    }
 }

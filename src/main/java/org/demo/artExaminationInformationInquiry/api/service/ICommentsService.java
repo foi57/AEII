@@ -1,5 +1,6 @@
 package org.demo.artExaminationInformationInquiry.api.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Comments;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -13,4 +14,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface ICommentsService extends IService<Comments> {
     Boolean insertComment(Comments comments);
+    Page<Comments> selectCommentListByArticleId(Long articleId, Integer pageNum, Integer pageSize);
 }

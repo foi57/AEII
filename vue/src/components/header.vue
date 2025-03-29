@@ -60,7 +60,9 @@ onMounted(unreadCount)
         </el-col>
         <el-link :underline="false" href="/notification">
         <el-col :span="2">
-          <el-badge :value="unreadCounts">
+          <el-badge :value="unreadCounts"
+                    :show-zero="false"
+          >
           <el-row style=" white-space: nowrap">
             <el-icon size="24"><Notification /></el-icon>
             <span style="font-size: 12px;">消息</span>

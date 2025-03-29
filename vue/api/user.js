@@ -105,5 +105,14 @@ export default {
             method: 'post',
             data: formData
         })
+    },
+    selectById(id){
+        return request({
+            url: '/users/selectById',
+            method: 'get',
+            params:{
+                id: id
+            }
+        })
     }
 }

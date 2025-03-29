@@ -157,4 +157,9 @@ public class UsersController {
       Page<Users> usersPage=usersService.selectUsersByNamePage(name,pageNum,pageSize);
       return ResponseEntity.ok(usersPage);
    }
+   @GetMapping("/selectById")
+   public ResponseEntity<Users> selectById(@RequestParam("id") Long id){
+      Users users=usersService.selectUsersById(id);
+      return ResponseEntity.ok(users);
+   }
 }

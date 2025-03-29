@@ -82,4 +82,9 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         queryWrapper.like("users_name", usersName);
         return lambdaQuery().page(page);
     }
+
+    @Override
+    public Users selectUsersById(Long id) {
+        return lambdaQuery().eq(Users::getUsersId, id).one();
+    }
 }

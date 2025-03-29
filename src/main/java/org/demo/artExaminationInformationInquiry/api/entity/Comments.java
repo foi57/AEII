@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
@@ -44,15 +45,18 @@ public class Comments implements Serializable {
     @TableField("reply_id")
     private Integer replyId;
 
-    @TableField("thumbs")
+    @TableField( value = "thumbs",fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private Integer thumbs;
 
-    @TableField(value = "toUsers_id", typeHandler = JacksonTypeHandler.class)
+    @TableField(value = "to_users_id", typeHandler = JacksonTypeHandler.class)
     private List<Long> toUsersId;
 
     @TableField(value = "picture", typeHandler = JacksonTypeHandler.class)
     private List<String> picture;
 
-    @TableField("create_time")
+    @TableField(value = "create_time",fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createTime;
+
+    @TableField(exist = false)
+    private List<Comments> subComments;
 }

@@ -27,4 +27,5 @@ public interface IUsersService extends IService<Users> {
     String selectPassword(String usersName);
     void updatePassword(String usersName, String usersPassword);
     Page<Users> selectUsersByNamePage(String usersName, int pageNum, int pageSize);
+    Users selectUsersById(Long id);
 }

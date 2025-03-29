@@ -1,7 +1,9 @@
 package org.demo.artExaminationInformationInquiry.api.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Comments;
 import org.demo.artExaminationInformationInquiry.api.service.ICommentsService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +41,9 @@ public class CommentsController {
         }catch (IOException e){
             return "上传失败";
         }
-
+    }
+    @PostMapping("/selectListByArticleId")
+    public Page<Comments> selectListByArticleId(Long articleId, Integer pageNum, Integer pageSize) {
+        return commentsService.selectCommentListByArticleId(articleId, pageNum, pageSize);
     }
 }
