@@ -15,4 +15,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface ICommentsService extends IService<Comments> {
     Boolean insertComment(Comments comments);
     Page<Comments> selectCommentListByArticleId(Long articleId, Integer pageNum, Integer pageSize);
+    Boolean deleteCommentById(Long commentId);
+    Boolean thumbsUp(Long commentId,Long usersId);
+    Boolean cancelThumbsUp(Long commentId,Long usersId);
 }

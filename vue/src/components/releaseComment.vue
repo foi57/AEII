@@ -11,6 +11,8 @@ import { useRoute } from 'vue-router';
 
 const props = defineProps({
   replyId: Number,
+  replyName: String,
+  toUserId: Number,
 })
 const articleId = useRoute().params.id
 const userStore = Store()
@@ -23,6 +25,11 @@ const commentData = reactive({
   articleId: articleId,
   selectedUsersId: [] // 新增选中用户存储
 })
+
+if(props.toUserId){
+  commentData.selectedUsersId.push(props.toUserId)
+  commentData.commentContent = `回复 ${props.replyName}:`
+}
 
 const beforeUpload = (file) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -57,9 +64,10 @@ const handleIsUploadImg = () => {
     commentData.commentImg = []
   }
 }
-const releaseComment = () => {
+const emit = defineEmits(['commentSuccess'])
+
+const releaseComment = async () => {
   const formData = new FormData()
-  // 提取选择的用户ID数组
   formData.append('content', commentData.commentContent)
   formData.append('usersId', commentData.commentUserId)
   formData.append('picture', commentData.commentImg)
@@ -69,7 +77,16 @@ const releaseComment = () => {
     formData.append('replyId', props.replyId)
   }
   try {
-    const res = comments.insertComment(formData)
+    const res = await comments.insertComment(formData)
+    if (res) {
+      ElMessage.success('评论发布成功')
+      // 重置表单数据
+      commentData.commentContent = ''
+      commentData.commentImg = []
+      commentData.selectedUsersId = []
+      // 触发成功事件
+      emit('commentSuccess')
+    }
   } catch (error) {
     console.error('评论发布失败:', error)
     ElMessage.error('评论发布失败')
@@ -132,7 +149,7 @@ const handleUserSelect = (option) => {
           v-model="commentData.commentContent"
           type="textarea"
           :options="commentData.toUserOptions"
-          placeholder="输入评论内容..."
+          :placeholder="`回复 ${props.replyName}:`"
           @search="fetchUsers"
           @select="handleUserSelect"
           :loading="loading"

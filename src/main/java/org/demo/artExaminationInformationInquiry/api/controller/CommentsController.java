@@ -3,7 +3,6 @@ package org.demo.artExaminationInformationInquiry.api.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Comments;
 import org.demo.artExaminationInformationInquiry.api.service.ICommentsService;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,5 +44,20 @@ public class CommentsController {
     @PostMapping("/selectListByArticleId")
     public Page<Comments> selectListByArticleId(Long articleId, Integer pageNum, Integer pageSize) {
         return commentsService.selectCommentListByArticleId(articleId, pageNum, pageSize);
+    }
+
+    @PostMapping("/delete")
+    public Boolean deleteById(Long commentId) {
+        return commentsService.deleteCommentById(commentId);
+    }
+
+    @PostMapping("/thumbsUp")
+    public Boolean thumbsUp(Long commentId,Long usersId) {
+        return commentsService.thumbsUp(commentId,usersId);
+    }
+
+    @PostMapping("/cancelThumbsUp")
+    public Boolean cancelThumbsUp(Long commentId,Long usersId) {
+        return commentsService.cancelThumbsUp(commentId,usersId);
     }
 }

@@ -45,8 +45,8 @@ public class Comments implements Serializable {
     @TableField("reply_id")
     private Integer replyId;
 
-    @TableField( value = "thumbs",fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
-    private Integer thumbs;
+    @TableField( value = "thumb",fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    private Integer thumb;
 
     @TableField(value = "to_users_id", typeHandler = JacksonTypeHandler.class)
     private List<Long> toUsersId;

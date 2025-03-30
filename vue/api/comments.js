@@ -21,5 +21,29 @@ export default {
             method: 'post',
             data
         })
+    },
+    deleteComment(data) {
+        return request({
+            url: '/comments/delete',
+            method: 'post',
+            data
+        }) 
+    },
+    // 添加点赞方法
+    thumbsUp(data) {
+        return request({
+            url: '/comments/thumbsUp',
+            method: 'post',
+            data
+        })
+    },
+    
+    // 添加取消点赞方法
+    cancelThumbsUp(data) {
+        return request({
+            url: '/comments/cancelThumbsUp',
+            method: 'post',
+            data
+        })
     }
 }

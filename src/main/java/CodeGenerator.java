@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.generator.config.OutputFile;
 import com.baomidou.mybatisplus.generator.config.rules.DbColumnType;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
 import com.baomidou.mybatisplus.generator.model.ClassAnnotationAttributes;
-import lombok.Data;
 
 public class CodeGenerator {
 
@@ -14,7 +13,7 @@ public class CodeGenerator {
                 .globalConfig(builder -> {
                     builder.author("黄毓峰") // 设置作者
                             .enableSwagger() // 开启 Swagger 模式
-                            .outputDir("E:\\code\\java\\learn\\ArtExaminationInformationInquiry\\src\\main\\java"); // 指定输出目录
+                            .outputDir("D:\\code\\java\\learn\\ArtExaminationInformationInquiry\\src\\main\\java"); // 指定输出目录
                 })
                 .dataSourceConfig(builder ->
                         builder.typeConvertHandler((globalConfig, typeRegistry, metaInfo) -> {
@@ -32,7 +31,7 @@ public class CodeGenerator {
                                 .pathInfo(Collections.singletonMap(OutputFile.xml, "E:\\code\\java\\learn\\ArtExaminationInformationInquiry\\src\\main\\resources\\mapper")) // 设置 Mapper XML 文件的生成路径
                 )
                 .strategyConfig(builder -> {
-                    builder.addInclude("comments") // 设置需要生成的表名
+                    builder.addInclude("comments_users") // 设置需要生成的表名
                             .addTablePrefix("t_", "c_"); // 设置过滤表前缀
                     builder.controllerBuilder() // 启用控制器生成器
                             .enableRestStyle(); // 开启 Rest 风格，生成 @RestController
