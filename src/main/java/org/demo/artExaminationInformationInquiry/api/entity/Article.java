@@ -2,6 +2,9 @@ package org.demo.artExaminationInformationInquiry.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
@@ -35,6 +38,7 @@ public class Article implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "article_id", type = IdType.AUTO)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long articleId;
 
     @TableField("article_title")

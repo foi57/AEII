@@ -90,9 +90,10 @@ const routes = [
     component: () => import('../components/collection.vue')
   },
   {
-    path: '/notification',
+    path: '/notification/:active',
     name: 'notification',
-    component: () => import('../views/Notification.vue')
+    component: () => import('../views/notification.vue'),
+    props: true
   }
 ];
 

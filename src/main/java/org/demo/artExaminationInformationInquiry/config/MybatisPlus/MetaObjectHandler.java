@@ -13,7 +13,7 @@ public class MetaObjectHandler implements com.baomidou.mybatisplus.core.handlers
         this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
         this.strictInsertFill(metaObject,"deleted",Integer.class,0);
         this.strictInsertFill(metaObject,"isRead",Boolean.class,false);
-        this.strictInsertFill(metaObject,"thumbs",Integer.class,0);
+        this.strictInsertFill(metaObject,"thumb",Integer.class,0);
     }
 
     @Override

@@ -11,6 +11,14 @@ import CommentList from "../components/commentList.vue"; // 新增服务器地�
 
 const route = useRoute()
 const articleDetail = ref({})
+// 添加一个ref用于触发评论列表刷新
+const refreshComments = ref(0)
+
+// 处理评论发布成功事件
+const handleCommentSuccess = () => {
+  // 增加计数器值，触发评论列表组件的更新
+  refreshComments.value++
+}
 
 onMounted(async () => {
   try {
@@ -56,8 +64,10 @@ onMounted(async () => {
   <div>
     <h3>交流区</h3>
     <div class="comment-section">
-      <Comment/>
-      <comment-list/>
+      <!-- 添加@comment-success事件监听 -->
+      <Comment @comment-success="handleCommentSuccess"/>
+      <!-- 将refreshComments传递给评论列表组件 -->
+      <comment-list :refresh-trigger="refreshComments" />
     </div>
   </div>
 </template>

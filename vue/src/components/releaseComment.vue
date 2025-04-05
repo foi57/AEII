@@ -13,8 +13,15 @@ const props = defineProps({
   replyId: Number,
   replyName: String,
   toUserId: Number,
+  articleId: Number,
 })
-const articleId = useRoute().params.id
+const articleId = ref(null)
+if(useRoute().params.id)
+ articleId.value = useRoute().params.id
+else{
+  articleId.value = props.articleId
+}
+
 const userStore = Store()
 const userAvatar = userStore.usersAvatar
 const commentData = reactive({
@@ -22,11 +29,12 @@ const commentData = reactive({
   commentImg: [],
   commentUserId: userStore.usersId,
   toUserOptions: [],
-  articleId: articleId,
+  articleId: articleId.value,
   selectedUsersId: [] // 新增选中用户存储
 })
 
 if(props.toUserId){
+  console.log('toUser',props.toUserId)
   commentData.selectedUsersId.push(props.toUserId)
   commentData.commentContent = `回复 ${props.replyName}:`
 }
@@ -64,7 +72,7 @@ const handleIsUploadImg = () => {
     commentData.commentImg = []
   }
 }
-const emit = defineEmits(['commentSuccess'])
+
 
 const releaseComment = async () => {
   const formData = new FormData()
@@ -75,23 +83,24 @@ const releaseComment = async () => {
   formData.append('articleId', commentData.articleId)
   if (props.replyId) {
     formData.append('replyId', props.replyId)
-  }
-  try {
-    const res = await comments.insertComment(formData)
-    if (res) {
-      ElMessage.success('评论发布成功')
-      // 重置表单数据
-      commentData.commentContent = ''
-      commentData.commentImg = []
-      commentData.selectedUsersId = []
-      // 触发成功事件
-      emit('commentSuccess')
+  }   
+    try {
+      const res = await comments.insertComment(formData)
+      if (res.data) {
+        ElMessage.success('发布成功')
+        // 清空表单
+        commentData.commentContent = ''
+        commentData.picture = []
+        
+        // 触发事件并传递新评论数据
+        emit('comment-success', res.data)
+      }
+    } catch (err) {
+      console.error('评论发布失败:', err)
+      ElMessage.error('评论发布失败')
     }
-  } catch (error) {
-    console.error('评论发布失败:', error)
-    ElMessage.error('评论发布失败')
   }
-}
+
 
 const loading = ref(false)
 
@@ -135,6 +144,17 @@ const handleUserSelect = (option) => {
   }
 }
 
+// 添加一个方法来通知父组件用户正在输入
+const emit = defineEmits(['comment-success', 'userTyping'])
+
+// 在输入框获得焦点或内容变化时触发
+const handleInputFocus = () => {
+  emit('userTyping', true)
+}
+
+const handleInputBlur = () => {
+  emit('userTyping', false)
+}
 </script>
 
 <template>
@@ -149,11 +169,14 @@ const handleUserSelect = (option) => {
           v-model="commentData.commentContent"
           type="textarea"
           :options="commentData.toUserOptions"
-          :placeholder="`回复 ${props.replyName}:`"
+          :placeholder="props.replyName ?  `回复 ${props.replyName}:` : '发表评论'"
           @search="fetchUsers"
           @select="handleUserSelect"
           :loading="loading"
           value-key="value"
+          @focus="handleInputFocus"
+          @blur="handleInputBlur"
+          @input="handleInputFocus"
       />
     </el-col>
   </el-row>

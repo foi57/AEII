@@ -45,5 +45,20 @@ export default {
             method: 'post',
             data
         })
+    },
+    selectCommentListByUserId(data) {
+        return request({
+            url: '/comments/selectListByUserId',
+            method: 'post',
+            data
+        })
+    },
+    // 在现有的comments.js中添加以下方法
+    selectCommentById(data) {
+        return request({
+            url: '/comments/selectById',
+            method: 'post',
+            data
+        })
     }
 }

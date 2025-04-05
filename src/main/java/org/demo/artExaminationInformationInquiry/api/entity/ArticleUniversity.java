@@ -2,15 +2,16 @@ package org.demo.artExaminationInformationInquiry.api.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
 import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+
 import java.io.Serializable;
 import java.util.List;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+
 /**
  * <p>
  * 
@@ -20,13 +21,14 @@ import lombok.ToString;
  * @since 2025-03-08
  */
 @Data
-@TableName("article_university")
+@TableName(value =  "article_university",autoResultMap = true)
 @ApiModel(value = "ArticleUniversity对象", description = "")
 public class ArticleUniversity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableField("article_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long articleId;
 
     @TableField("university_name")

@@ -13,9 +13,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2025-03-27
  */
 public interface ICommentsService extends IService<Comments> {
-    Boolean insertComment(Comments comments);
-    Page<Comments> selectCommentListByArticleId(Long articleId, Integer pageNum, Integer pageSize);
+    // 将返回类型从Boolean改为Comments
+    Comments insertComment(Comments comments);
+    Page<Comments> selectCommentListByArticleId(Long articleId, Integer pageNum, Integer pageSize,Long usersId);
     Boolean deleteCommentById(Long commentId);
     Boolean thumbsUp(Long commentId,Long usersId);
     Boolean cancelThumbsUp(Long commentId,Long usersId);
+    Page<Comments> selectCommentsByUsersId(Long usersId,Integer pageNum,Integer pageSize);
+    Comments selectCommentById(Long commentId);
 }

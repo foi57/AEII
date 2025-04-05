@@ -1,12 +1,9 @@
 package org.demo.artExaminationInformationInquiry.api.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import net.sf.jsqlparser.expression.DateTimeLiteralExpression;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.demo.artExaminationInformationInquiry.api.entity.Article;
-import org.demo.artExaminationInformationInquiry.api.entity.ArticleUniversity;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleService;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleUniversityService;
 import org.slf4j.Logger;
@@ -23,8 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

@@ -1,7 +1,6 @@
 package org.demo.artExaminationInformationInquiry.api.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.apache.ibatis.annotations.Param;
 import org.demo.artExaminationInformationInquiry.api.entity.Users;
 import org.demo.artExaminationInformationInquiry.api.service.IUsersService;
 import org.demo.artExaminationInformationInquiry.config.SecurityConfig.JwtTokenUtil;
@@ -63,6 +62,7 @@ public class UsersController {
 
    @GetMapping("/selectByRole")
    public Map<String,Object> selectByRole(@RequestParam("role") String role,@RequestParam("page") Integer pageNum,@RequestParam("size") Integer pageSize){
+      logger.debug("角色:{}页码{}页数:{}", role, pageNum, pageSize);
       return usersService.selectUsersByRole(role,pageNum,pageSize);
    }
    @GetMapping("/selectByName")

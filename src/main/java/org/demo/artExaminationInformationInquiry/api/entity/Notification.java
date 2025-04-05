@@ -27,7 +27,7 @@ public class Notification implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "notificationId", type = IdType.AUTO) // 添加主键生成策略
-    @JsonSerialize(using = ToStringSerializer.class) // 添加此注解
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long notificationId;
 
     @TableField("userId")

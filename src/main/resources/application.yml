@@ -18,6 +18,9 @@ jwt:
   expiration: 3600
   refreshExpiration: 604800  # 7天（单位：秒）
 logging:
+  charset:
+    console: GBK
+    file: GBK
   level:
     org:
       demo:

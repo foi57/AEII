@@ -4,6 +4,7 @@ import serverUrl from "../../serverUrl.js";
 import {Notification, UserFilled} from "@element-plus/icons-vue";
 import notificationUser from "../../api/notificationUser.js";
 import {onMounted, ref} from "vue";
+import comments from "../../api/comments.js";
 const userStore = Store();
 const userAvatar = userStore.usersAvatar;
 const userName = userStore.usersName;
@@ -24,11 +25,15 @@ const handleCommand = (command) => {
   }
 }
 const unreadCounts=ref(0)
+const notificationCount = ref(0)
+const replyMeCount=ref(0)
 const unreadCount = () => {
   const userId = userStore.usersId
   notificationUser.unread(userId).then(res => {
-    unreadCounts.value = res.data
+    notificationCount.value = res.data
+    unreadCounts.value+=notificationCount.value
   })
+
 }
 onMounted(unreadCount)
 </script>
@@ -58,18 +63,37 @@ onMounted(unreadCount)
         </template>
       </el-dropdown>
         </el-col>
-        <el-link :underline="false" href="/notification">
+    
         <el-col :span="2">
           <el-badge :value="unreadCounts"
                     :show-zero="false"
           >
           <el-row style=" white-space: nowrap">
-            <el-icon size="24"><Notification /></el-icon>
-            <span style="font-size: 12px;">消息</span>
+            <el-dropdown>
+              <div>
+                <el-icon size="24"><Notification /></el-icon>
+                <span style="font-size: 12px; display: block;">消息</span>
+              </div>
+            <template #dropdown>
+              <el-dropdown-menu slot="dropdown">
+                <el-bagde :value="notificationCount"
+                          :show-zero="false">
+                <el-dropdown-item> 
+                  <el-link href="/notification/1">通知</el-link>
+                </el-dropdown-item>
+                </el-bagde>
+                <el-bagde :value="replyMeCount"
+                          :show-zero="false">
+                <el-dropdown-item>
+                  <el-link href="/notification/2">回复我的</el-link>
+                </el-dropdown-item>
+                </el-bagde>
+              </el-dropdown-menu>
+            </template>
+            </el-dropdown>
           </el-row>
           </el-badge>
         </el-col>
-        </el-link>
   </el-row>
 </template>
 
