@@ -10,7 +10,7 @@ const pageSize = ref(5)
 const userStore = Store();
 const data = ref({
   records: [],
-  total: 0
+  total: -1
 }) 
 
 // 添加加载状态
@@ -28,16 +28,15 @@ const loadNotifications = async() => {
         formData.append('pageNum', pageNum.value)
         formData.append('pageSize', pageSize.value)
         formData.append('usersId', userStore.usersId)
-        formData.append("category", commentNotificationCategory.replyMe)
+        formData.append("category", commentNotificationCategory.toMe)
         const res = await commentsNotification.selectCommentsNotificationByUserIdCategory(formData)
-        
         if (!isUnmounted.value) {
             data.value = res.data
         }
     } catch(err) {
         if (!isUnmounted.value) {
             console.error(err)
-            data.value = { records: [], total: 0 }
+            data.value = { records: [], total: -1 }
         }
     } finally {
         if (!isUnmounted.value) {
@@ -59,12 +58,12 @@ watch(() => pageNum.value, () => {
     // 不再重复调用 loadNotifications
 })
 
-const refreshData = () => {
-    if (isUnmounted.value) return
+// const refreshData = () => {
+//     if (isUnmounted.value) return
     
-    pageNum.value = 1 // 刷新时重置为第一页
-    loadNotifications()
-}
+//     pageNum.value = 1 // 刷新时重置为第一页
+//     loadNotifications()
+// }
 
 onMounted(() => {
     isUnmounted.value = false
@@ -75,21 +74,21 @@ onBeforeUnmount(() => {
     isUnmounted.value = true
 })
 
-defineExpose({
-    refreshData
-})
+// defineExpose({
+//     refreshData
+// })
 </script>
 
 <template>
   <div>
     <commentNotificationVue 
-      v-if="data.total !== 0" 
+      v-if="data.total !== -1" 
       :data="data" 
       :loading="loading"
       @refresh="refreshData"
       @page-change="handlePageChange"
     />
-    <el-empty v-else-if="!loading" description="暂无回复" />
+    <el-empty v-else-if="!loading" description="暂无@我的消息" />
     <el-skeleton v-else :rows="5" animated />
   </div>
 </template>

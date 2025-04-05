@@ -10,6 +10,7 @@ const handleSelect = (index) => {
 </script>
 
 <template>
+<Header/>
   <el-header>
     <el-menu
       :default-active="activeIndex"

@@ -2,8 +2,14 @@
 import user from "../../api/user.js";
 import {ElMessage} from "element-plus";
 import {onMounted, ref} from "vue";
-import {Search} from "@element-plus/icons-vue";
+import {Search, UserFilled} from "@element-plus/icons-vue"; // 添加 UserFilled 图标
 import {Store} from "../store/index.js";
+import serverUrl from "../../serverUrl.js"; // 导入服务器URL
+import token from "../assets/token.js";
+// 引入裁剪相关组件
+import 'vue-cropper/dist/index.css'
+import {VueCropper} from "vue-cropper";
+
 const userStore = Store();
 let users=ref([]);
 const count = ref(0)
@@ -38,6 +44,10 @@ const userTypes = [
     label: '管理员',
     value: 'admin'
   },
+  {
+    label: '普通用户',
+    value: 'user' 
+  }
 ]
 const currentPage3 = ref(1);
 const pageSize3 = ref(50);
@@ -66,6 +76,7 @@ const userForm = ref({
   email: '',
   phone: '',
   role: '',
+  avatar: '' // 添加avatar字段
 })
 const handleUserForm = (todo) => {
   formRef.value.validate((valid) => {  // 使用表单引用进行验证
@@ -123,8 +134,96 @@ const handleDeleteUser = () => {
   })
   handleDeleteDialog.value=false;
 }
+
+// 添加裁剪相关变量
+const cropVisible = ref(false)
+const cropper = ref(null)
+const cropFile = ref(null) // 存储原始文件
+const newAvatarUrl = ref('') // 存储裁剪后的图片URL
+
+// 修改头像上传方法
+const beforeAvatarUpload = (rawFile) => {
+  // 暂存原始文件
+  cropFile.value = rawFile
+  // 打开裁剪弹窗
+  cropVisible.value = true
+  return false // 阻止自动上传
+}
+
+// 创建URL方法
+const createURL = () => {
+  if (!cropFile.value || !(cropFile.value instanceof Blob)) {
+    console.error('无效的文件对象', cropFile.value);
+    return '';
+  }
+  try {
+    return URL.createObjectURL(cropFile.value);
+  } catch (error) {
+    console.error('URL生成失败:', error);
+    return '';
+  }
+}
+
+// 裁剪确认方法
+const confirmCrop = () => {
+  cropper.value.getCropBlob(async (blob) => {
+    const formData = new FormData()
+    formData.append('file', new File([blob], cropFile.value.name, {
+      type: blob.type,
+      lastModified: Date.now()
+    }))
+    formData.append('id', userForm.value.id)
+    
+    user.updateAvatar(formData).then(res => {
+      ElMessage.success('头像上传成功')
+      newAvatarUrl.value = res.data
+      cropVisible.value = false
+      
+      // 更新用户列表中的头像
+      const updatedUser = users.value.find(u => u.usersId === userForm.value.id)
+      if (updatedUser) {
+        updatedUser.usersAvatar = res.data
+      }
+    }).catch(err => {
+      ElMessage.error('头像上传失败')
+      console.error(err)
+    })
+  })
+}
+
+// 裁剪器初始化完成回调
+const onCropperReady = () => {
+  console.log('裁剪器初始化完成')
+  cropper.value?.setAspectRatio(1) // 强制设置1:1比例
+}
+
+// 修改编辑用户方法，添加头像信息
+const editUserWithAvatar = (userData) => {
+  insertOrEdit.value = 'edit';
+  userForm.value = {
+    id: userData.usersId,
+    userName: userData.usersName,
+    password: '', // 密码通常不显示原值
+    email: userData.usersEmail,
+    phone: userData.usersPhone,
+    role: userData.usersRole,
+    avatar: userData.usersAvatar || '' // 添加头像
+  };
+  handleDialog.value = true;
+}
+
+const token1=localStorage.getItem(token.token);
 </script>
 <template>
+
+<el-input style="width: 240px;" placeholder="请输入用户名"  v-model="userSelectValue">
+      <template #append>
+        <el-button @click="selectUserByName(userSelectValue)">
+          <el-icon><Search /></el-icon>
+        </el-button>
+      </template>
+    </el-input>
+
   <div class="select-block">
 
     <label>用户类型:</label>
@@ -136,12 +235,23 @@ const handleDeleteUser = () => {
           :value="item.value">
       </el-option>
     </el-select>
-    <el-input style="width: 240px" placeholder="请输入用户名" :suffix-icon="Search" v-model="userSelectValue"></el-input>
-    <el-button type="primary" @click="selectUserByName(userSelectValue)">搜索</el-button>
+   
   </div>
   <div>
     <el-table :data="users">
       <el-table-column prop="usersId" label="用户ID" v-if="false"></el-table-column>
+      <!-- 添加头像列 -->
+      <el-table-column label="头像" width="100">
+        <template #default="scope">
+          <el-avatar 
+            :size="50"
+            :src="scope.row.usersAvatar ? `${serverUrl.url}/users/avatar/${scope.row.usersAvatar}` : ''"
+            @error="() => true"
+          >
+            <el-icon><UserFilled /></el-icon>
+          </el-avatar>
+        </template>
+      </el-table-column>
       <el-table-column prop="usersName" label="用户名"></el-table-column>
       <el-table-column prop="usersEmail" label="邮箱"></el-table-column>
       <el-table-column prop="usersPhone" label="手机号"></el-table-column>
@@ -149,18 +259,7 @@ const handleDeleteUser = () => {
       <el-table-column prop="usersRole" label="用户类型"></el-table-column>
       <el-table-column label="操作">
         <template #default="scope" v-if="userRole==='seniorAdmin'">
-          <el-button type="primary" @click="() =>{insertOrEdit='edit';
-       userForm = {
-      id:scope.row.usersId,
-      userName: scope.row.usersName,
-      password: '', // 密码通常不显示原值
-      email: scope.row.usersEmail,
-      phone: scope.row.usersPhone,
-      role: scope.row.usersRole
-    };
-            console.log('userForm',userForm)
-       handleDialog=true;
-       }">编辑</el-button>
+          <el-button type="primary" @click="editUserWithAvatar(scope.row)">编辑</el-button>
           <el-button type="danger" @click="editUser(scope.row.usersId)">删除</el-button>
         </template>
       </el-table-column>
@@ -179,7 +278,64 @@ const handleDeleteUser = () => {
     />
   </div>
   <el-dialog title="编辑用户" v-model="handleDialog">
-    <el-form  :model="userForm" :rules="rules" ref="formRef">
+    <el-form :model="userForm" :rules="rules" ref="formRef">
+      <!-- 添加头像显示和上传 -->
+      <el-form-item label="头像">
+        <!-- 显示当前头像或新上传的头像 -->
+        <el-image 
+          v-if="newAvatarUrl === ''" 
+          :src="userForm.avatar ? `${serverUrl.url}/users/avatar/${userForm.avatar}` : ''" 
+          style="max-width: 100px"
+        >
+          <template #error>
+            <div class="image-slot">
+              <el-icon :size="30"><UserFilled /></el-icon>
+            </div>
+          </template>
+        </el-image>
+        
+        <el-image 
+          v-if="newAvatarUrl !== ''" 
+          :src="`${serverUrl.url}/users/avatar/${newAvatarUrl}`" 
+          style="max-width: 100px"
+        >
+          <template #error>
+            <div class="image-slot">
+              <el-icon :size="30"><UserFilled /></el-icon>
+            </div>
+          </template>
+        </el-image>
+        
+        <!-- 裁剪弹窗 -->
+        <el-dialog v-model="cropVisible" title="裁剪头像" width="800px">
+          <vue-cropper
+            v-if="cropFile !==null"
+            ref="cropper"
+            :img="cropFile ? createURL() : ''"
+            :autoCrop="true"
+            :fixed="true"
+            :fixedNumber="[1, 1]"
+            :ready="onCropperReady"
+            style="width: 100%; height: 600px"
+          />
+          <template #footer>
+            <el-button @click="cropVisible = false">取消</el-button>
+            <el-button type="primary" @click="confirmCrop">确认上传</el-button>
+          </template>
+        </el-dialog>
+        
+        <!-- 上传组件 -->
+        <el-upload
+          class="avatar-uploader"
+          :before-upload="beforeAvatarUpload"
+          :show-file-list="false"
+          accept="image/*"
+        >
+          <el-button size="small" type="primary">更新头像</el-button>
+        </el-upload>
+      </el-form-item>
+      
+      <!-- 其他表单项保持不变 -->
       <el-form-item label="用户名" prop="userName">
         <el-input placeholder="请输入用户名" v-model="userForm.userName"></el-input>
       </el-form-item>
@@ -238,4 +394,18 @@ const handleDeleteUser = () => {
   align-items: center;
 }
 
+/* 添加头像上传样式 */
+.avatar-uploader {
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+.image-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  background-color: #f5f7fa;
+}
 </style>

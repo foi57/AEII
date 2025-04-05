@@ -1,7 +1,7 @@
 <script setup>
 import {Store} from '../store/index.js';
 import commentNotificationCategory from '../assets/commentNotificationCategory.js';
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, watch, onBeforeUnmount} from 'vue'; // 添加 onBeforeUnmount
 import commentsNotification from '../../api/commentsNotification.js';
 import serverUrl from "../../serverUrl.js";
 import { UserFilled } from '@element-plus/icons-vue';
@@ -10,13 +10,10 @@ import user from "../../api/user.js";
 import comments from "../../api/comments.js";
 import ReleaseComment from "./releaseComment.vue"; // 导入发布评论组件
 
-const props = defineProps({
-  data: {
-    type: Object,
-    default: () => ({ records: [], total: 0 })
-  },
-})
+// 添加事件定义
+const emit = defineEmits(['refresh', 'page-change'])
 
+const isUnmounted = ref(false)
 const pageNum = ref(1)
 const pageSize = ref(5)
 const total = ref(0)
@@ -32,6 +29,17 @@ const currentReplyId = ref(null)
 const currentReplyName = ref('')
 const currentToUserId = ref(null)
 const currentArticleId = ref(null)
+
+const props = defineProps({
+  data: {
+    type: Object,
+    default: () => ({ records: [], total: 0 })
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  }
+})
 
 
 // 格式化时间
@@ -53,8 +61,51 @@ const fetchUserNames = async (userIds) => {
   }
 }
 
+// 加载评论详情
+const loadCommentDetails = async (commentIds, type = 'reply') => {
+  try {
+    const promises = commentIds.map(async (commentId) => {
+      const formData = new FormData()
+      formData.append('id', Number(commentId))
+      const res = await comments.selectCommentById(formData)
+      return res.data
+    })
+    
+    const results = await Promise.all(promises)
+    if (type === 'reply') {
+      commentList.value = results.filter(item => item) // 过滤掉可能的null值
+    }
+    return results.filter(item => item)
+  } catch (error) {
+    console.error('获取评论详情失败:', error)
+    ElMessage.error('获取评论详情失败')
+    return []
+  }
+}
+
+// 加载原评论详情
+const loadOriginalCommentDetails = async (commentIds) => {
+  try {
+    const originalComments = await loadCommentDetails(commentIds, 'original')
+    
+    // 将原评论与通知关联
+    notificationList.value.forEach(notification => {
+      const originalComment = originalComments.find(
+        comment => comment.commentsId === notification.replyId
+      )
+      if (originalComment) {
+        notification.originalComment = originalComment
+      }
+    })
+  } catch (error) {
+    console.error('获取原评论详情失败:', error)
+  }
+}
+
 // 加载评论通知
 const loadComment = async () => {
+  if (isUnmounted.value) return // 如果组件已卸载，不执行加载
+  
   loading.value = true
   const formData = new FormData()
   // 确保这些值都是有效的
@@ -95,47 +146,19 @@ const loadComment = async () => {
   }
 }
 
-// 加载评论详情
-const loadCommentDetails = async (commentIds, type = 'reply') => {
-  try {
-    const promises = commentIds.map(async (commentId) => {
-      const formData = new FormData()
-      console.log('加载评论', commentId)
-      formData.append('id', Number(commentId))
-      const res = await comments.selectCommentById(formData)
-      return res.data
-    })
-    
-    const results = await Promise.all(promises)
-    if (type === 'reply') {
-      commentList.value = results.filter(item => item) // 过滤掉可能的null值
-    }
-    return results.filter(item => item)
-  } catch (error) {
-    console.error('获取评论详情失败:', error)
-    ElMessage.error('获取评论详情失败')
-    return []
+// 监听 props.data 变化
+watch(() => props.data, (newData) => {
+  console.log('props.data 变化:', newData)
+  if (newData && newData.records) {
+    notificationList.value = newData.records
+    total.value = newData.total
+    loadComment()
   }
-}
+}, {  immediate: true })
 
-// 加载原评论详情
-const loadOriginalCommentDetails = async (commentIds) => {
-  try {
-    const originalComments = await loadCommentDetails(commentIds, 'original')
-    
-    // 将原评论与通知关联
-    notificationList.value.forEach(notification => {
-      const originalComment = originalComments.find(
-        comment => comment.commentsId === notification.replyId
-      )
-      if (originalComment) {
-        notification.originalComment = originalComment
-      }
-    })
-  } catch (error) {
-    console.error('获取原评论详情失败:', error)
-  }
-}
+
+
+
 
 // 标记通知为已读
 const markAsRead = async (notificationId) => {
@@ -145,7 +168,7 @@ const markAsRead = async (notificationId) => {
     await commentsNotification.markAsRead(formData)
     
     // 更新本地状态
-    const notification = notificationList.value.find(n => n.id === notificationId)
+    const notification = notificationList.value.find(n => n.notificationId === notificationId)
     if (notification) {
       notification.isRead = true
     }
@@ -154,10 +177,12 @@ const markAsRead = async (notificationId) => {
   }
 }
 
-// 处理页码变化
+// 修改处理页码变化的函数
 const handleCurrentChange = (val) => {
+  if (isUnmounted.value) return
+  
   pageNum.value = val
-  loadComment()
+  emit('page-change', val) // 向父组件发送页码变化事件
 }
 
 // 跳转到评论所在文章
@@ -184,9 +209,8 @@ const handleReply = (commentId, userName, userId,articleId) => {
 
 // 评论发布成功后的回调
 const onCommentSuccess = () => {
-  
   showReplyForm.value = false
-  
+  // emit('refresh') // 通知父组件刷新数据
 }
 
 // 取消回复
@@ -194,12 +218,19 @@ const cancelReply = () => {
   showReplyForm.value = false
 }
 
-onMounted(loadComment)
+
+onBeforeUnmount(() => {
+  isUnmounted.value = true
+})
+
+onMounted(() => {
+  isUnmounted.value = false
+})
 </script>
 
 <template>
   <div class="reply-container">
-    <h2>回复我的评论</h2>
+    <h2>回复我的</h2>
     
     <el-empty v-if="commentList.length === 0 && !loading" description="暂无回复" />
     
@@ -252,7 +283,7 @@ onMounted(loadComment)
       <!-- 原评论内容 -->
       <div v-if="notificationList[index]?.originalComment" class="original-comment">
         <div class="original-comment-header">
-          <span>回复了你的评论：</span>
+          <span>在该评论下回复你：</span>
         </div>
         <div class="original-comment-content">
           <el-tag size="small" type="info">原评论</el-tag>
@@ -331,7 +362,12 @@ onMounted(loadComment)
 
 <style scoped>
 .reply-container {
-  padding: 20px;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .comment-card {

@@ -9,6 +9,8 @@ import org.demo.artExaminationInformationInquiry.api.service.ICommentsNotificati
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.demo.artExaminationInformationInquiry.api.service.ICommentsService;
@@ -21,6 +23,7 @@ import org.demo.artExaminationInformationInquiry.api.service.ICommentsService;
  * @since 2025-04-01
  */
 @Service
+@Slf4j
 public class CommentsNotificationServiceImpl extends ServiceImpl<CommentsNotificationMapper, CommentsNotification> implements ICommentsNotificationService {
     
     private final ICommentsService commentsService;
@@ -47,7 +50,7 @@ public class CommentsNotificationServiceImpl extends ServiceImpl<CommentsNotific
             .eq(category != null && !category.isEmpty(), CommentsNotification::getCategory, category)
             .orderByDesc(CommentsNotification::getCreateTime)
             .page(page);
-        
+        log.debug("notificationPage:{}",notificationPage);
         // 如果需要返回Comments对象，需要进一步处理
         // 这里假设需要根据通知中的commentsId查询对应的评论
         Page<Comments> commentsPage = new Page<>(pageNum, pageSize);

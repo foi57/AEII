@@ -3,14 +3,8 @@ import article from "../../api/article.js";
 import {reactive, ref, toRefs} from "vue";
 import {ElLoading} from "element-plus";
 import {Store} from "../store/index.js";
-import {ArrowDown, UserFilled} from "@element-plus/icons-vue";
-import serverUrl from "../../serverUrl.js";
 import Header from "../components/header.vue";
 const userStore = Store();
-const userAvatar = userStore.usersAvatar;
-const userName = userStore.usersName;
-console.log('用户名',userName);
-console.log('头像',userAvatar);
 const form = reactive({
   articleTitle: '',
   articleType: '',
@@ -42,19 +36,10 @@ const guideForm = reactive({
   ...toRefs(form),
   articleType: 'guide'
 })
-const loadingInstances = {
-  latest: null,
-  notice: null,
-  admissions: null,
-  policy: null,
-  guide: null
-}
+
 
 const loadLatest = async () => {
-  loadingInstances.latest = ElLoading.service({
-    target: '.latestArticle-block',
-    text: '加载最新文章...'
-  })
+
 
   const res = await article.selectArticleList(form)
   latestArticle.value = res.data.records
@@ -63,10 +48,7 @@ const loadLatest = async () => {
 }
 
 const loadNotice = async () => {
-  loadingInstances.notice = ElLoading.service({
-    target: '.notice-block',
-    text: '加载通知...'
-  })
+
   await article.selectArticleList(noticeForm).then(res => {
     noticeArticle.value=res.data.records
   })
@@ -74,10 +56,7 @@ const loadNotice = async () => {
 }
 
 const loadAdmissions = async () => {
-  loadingInstances.admissions = ElLoading.service({
-    target: '.admissionsInformation-block',
-    text: '加载招生信息...'
-  })
+
   await article.selectArticleList(admissionsInformationForm).then(res => {
     admissionsInformationArticle.value=res.data.records
   })
@@ -85,20 +64,14 @@ const loadAdmissions = async () => {
 }
 
 const loadPolicy = async () => {
-  loadingInstances.policy = ElLoading.service({
-    target: '.policy-block',
-    text: '加载政策...'
-  })
+
   await article.selectArticleList(policyForm).then(res => {
     policyArticle.value=res.data.records
   })
 }
 
 const loadGuide = async () => {
-  loadingInstances.guide = ElLoading.service({
-    target: '.guide-block',
-    text: '加载备考指南...'
-  })
+
   await article.selectArticleList(guideForm).then(res => {
     guideArticle.value=res.data.records
   })
