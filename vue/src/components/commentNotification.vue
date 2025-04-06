@@ -9,9 +9,15 @@ import { ElMessage } from 'element-plus';
 import user from "../../api/user.js";
 import comments from "../../api/comments.js";
 import ReleaseComment from "./releaseComment.vue"; // 导入发布评论组件
+import { inject } from 'vue'; // 添加 inject
+
 
 // 添加事件定义
-const emit = defineEmits(['refresh', 'page-change'])
+const emit = defineEmits(['refresh', 'page-change', 'refresh-counts'])
+
+// 注入父组件提供的刷新方法和header引用
+const refreshUnreadCounts = inject('refreshUnreadCounts')
+const headerRef = inject('headerRef')
 
 const isUnmounted = ref(false)
 const pageNum = ref(1)
@@ -38,9 +44,15 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
-  }
+  },
+  isToMe: {
+    type: Boolean,
+    default: false
+  },
 })
 
+// 添加一键已读按钮的加载状态
+const markingAllAsRead = ref(false)
 
 // 格式化时间
 const formatTime = (timeStr) => {
@@ -115,7 +127,7 @@ const loadComment = async () => {
   formData.append("category", commentNotificationCategory.replyMe)
   try {
     // const res = await commentsNotification.selectCommentsNotificationByUserIdCategory(formData)
-    // console.log(res)
+    console.log(props.data)
     notificationList.value = props.data.records
     total.value = props.data.total
     
@@ -148,7 +160,6 @@ const loadComment = async () => {
 
 // 监听 props.data 变化
 watch(() => props.data, (newData) => {
-  console.log('props.data 变化:', newData)
   if (newData && newData.records) {
     notificationList.value = newData.records
     total.value = newData.total
@@ -172,6 +183,18 @@ const markAsRead = async (notificationId) => {
     if (notification) {
       notification.isRead = true
     }
+    
+    // 通知父组件更新未读数量
+    if (refreshUnreadCounts) {
+      refreshUnreadCounts()
+    }
+    
+    // 直接调用header组件的刷新方法
+    if (headerRef && headerRef.value) {
+      headerRef.value.refreshHeardUnreadCount()
+    }
+    
+    emit('refresh-counts')
   } catch (error) {
     console.error('标记已读失败:', error)
   }
@@ -199,10 +222,14 @@ const viewComment = async (comment, notification) => {
 }
 
 // 处理回复
-const handleReply = (commentId, userName, userId,articleId) => {
-  currentReplyId.value = commentId
+const handleReply = (commentId,replyCommentId, userName, userId,articleId) => {
+  if(props.isToMe && replyCommentId === null){
+    currentReplyId.value = commentId
+  }else{
+    currentReplyId.value = replyCommentId
+    currentToUserId.value = userId
+  }
   currentReplyName.value = userName
-  currentToUserId.value = userId
   currentArticleId.value = articleId
   showReplyForm.value = true
 }
@@ -226,11 +253,68 @@ onBeforeUnmount(() => {
 onMounted(() => {
   isUnmounted.value = false
 })
+
+// 添加一键已读所有通知的方法
+const markAllAsRead = async () => {
+  if (notificationList.value.length === 0 || isUnmounted.value) return
+  
+  // 检查是否有未读通知
+  const hasUnread = notificationList.value.some(notification => !notification.isRead)
+  if (!hasUnread) {
+    ElMessage.info('没有未读通知')
+    return
+  }
+  
+  markingAllAsRead.value = true
+  try {
+    const formData = new FormData()
+    formData.append('usersId', userStore.usersId)
+    formData.append('category', props.isToMe ? commentNotificationCategory.toMe : commentNotificationCategory.replyMe)
+    
+    await commentsNotification.markAllAsRead(formData)
+    
+    // 更新本地状态
+    notificationList.value.forEach(notification => {
+      notification.isRead = true
+    })
+    
+    ElMessage.success('所有通知已标记为已读')
+    // emit('refresh') // 通知父组件刷新数据
+    
+    // 通知父组件更新未读数量
+    if (refreshUnreadCounts) {
+      refreshUnreadCounts()
+    }
+    
+    // 直接调用header组件的刷新方法
+    if (headerRef && headerRef.value) {
+      headerRef.value.refreshHeardUnreadCount()
+    }
+    
+    emit('refresh-counts')
+  } catch (error) {
+    console.error('一键已读失败:', error)
+    ElMessage.error('一键已读失败')
+  } finally {
+    markingAllAsRead.value = false
+  }
+}
 </script>
 
 <template>
   <div class="reply-container">
-    <h2>回复我的</h2>
+    <div class="header-actions">
+      <h2>{{ props.isToMe ? '@我的' : '回复我的' }}</h2>
+      <el-button 
+        type="primary" 
+        size="small" 
+        @click="markAllAsRead" 
+        :loading="markingAllAsRead"
+        :disabled="notificationList.length === 0 || notificationList.every(n => n.isRead)"
+      >
+        一键已读
+      </el-button>
+    </div>
     
     <el-empty v-if="commentList.length === 0 && !loading" description="暂无回复" />
     
@@ -318,7 +402,7 @@ onMounted(() => {
         <el-button 
           type="primary" 
           size="small"
-          @click="handleReply(comment.replyId, userNames[comment.usersId], comment.usersId,comment.articleId)"
+          @click="handleReply(comment.commentsId,comment.replyId, userNames[comment.usersId], comment.usersId,comment.articleId)"
         >
           回复
         </el-button>
@@ -368,6 +452,13 @@ onMounted(() => {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .comment-card {

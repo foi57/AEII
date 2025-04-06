@@ -40,4 +40,13 @@ public class CommentsNotificationController {
        return commentsNotificationService.markAsRead(notificationId);
     }
     
+    @PostMapping("/markAllAsRead")
+    public Boolean markAllAsRead(Long usersId, String category) {
+        return commentsNotificationService.markAllAsRead(usersId, category);
+    }
+    
+    @PostMapping("/countUnRead")
+    public Long countCommentsNotificationUnRead(Long usersId, final String category) {
+       return commentsNotificationService.countCommentsNotificationUnRead(usersId,category);
+    }
 }

@@ -33,7 +33,7 @@ public class CodeGenerator {
                                 .pathInfo(Collections.singletonMap(OutputFile.xml, "E:\\code\\java\\learn\\ArtExaminationInformationInquiry\\src\\main\\resources\\mapper")) // 设置 Mapper XML 文件的生成路径
                 )
                 .strategyConfig(builder -> {
-                    builder.addInclude("comments_notification") // 设置需要生成的表名
+                    builder.addInclude("comments_notification_read") // 设置需要生成的表名
                             .addTablePrefix("t_", "c_"); // 设置过滤表前缀
                     builder.controllerBuilder() // 启用控制器生成器
                             .enableRestStyle(); // 开启 Rest 风格，生成 @RestController

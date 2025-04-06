@@ -3,7 +3,6 @@ package org.demo.artExaminationInformationInquiry.api.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Notification;
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.demo.artExaminationInformationInquiry.api.entity.Users;
 
 /**
  * <p>

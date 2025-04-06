@@ -1,7 +1,7 @@
 <script setup>
 import notification from "../../api/notification.js";
 import { Store } from "../store/index.js";
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, inject } from 'vue'
 import {ElEmpty, ElMessage, ElPagination} from 'element-plus'
 import notificationUser from "../../api/notificationUser.js";
 import Header from "../components/header.vue";
@@ -12,6 +12,13 @@ const page = ref(1)
 const size = ref(10)
 const total = ref(0)
 const loading = ref(false)
+
+// 注入父组件提供的刷新方法和header引用
+const refreshUnreadCounts = inject('refreshUnreadCounts')
+const headerRef = inject('headerRef')
+
+// 定义事件
+const emit = defineEmits(['refresh-counts'])
 
 const fetchNotifications = async () => {
   try {
@@ -34,15 +41,26 @@ const fetchNotifications = async () => {
 onMounted(fetchNotifications)
 
 const read = async (notificationListId) => {
-
   const formData = new FormData()
   formData.append('userId', userStore.usersId)
   formData.append("notificationId", notificationListId)
   try {
     await notificationUser.read(formData)
-  }catch (error) {
-    console.error('通知加载失败:', error)
-    ElMessage.error('通知加载失败')
+    // 标记已读成功后，通知父组件更新未读数量
+    if (refreshUnreadCounts) {
+      refreshUnreadCounts()
+    }
+    
+    // 直接调用header组件的刷新方法
+    if (headerRef && headerRef.value) {
+      headerRef.value.refreshHeardUnreadCount()
+    }
+    
+    // 同时触发事件
+    emit('refresh-counts')
+  } catch (error) {
+    console.error('标记已读失败:', error)
+    ElMessage.error('标记已读失败')
   }
 }
 </script>

@@ -58,12 +58,17 @@ watch(() => pageNum.value, () => {
     // 不再重复调用 loadNotifications
 })
 
-// const refreshData = () => {
-//     if (isUnmounted.value) return
+// 添加事件定义
+const emit = defineEmits(['refresh-counts'])
+
+// 刷新数据时同时刷新未读数量
+const refreshData = () => {
+    if (isUnmounted.value) return
     
-//     pageNum.value = 1 // 刷新时重置为第一页
-//     loadNotifications()
-// }
+    pageNum.value = 1 // 刷新时重置为第一页
+    loadNotifications()
+    emit('refresh-counts')
+}
 
 onMounted(() => {
     isUnmounted.value = false
@@ -83,12 +88,13 @@ onBeforeUnmount(() => {
   <div>
     <commentNotificationVue 
       v-if="data.total !== -1" 
+      :isToMe="true"
       :data="data" 
       :loading="loading"
       @refresh="refreshData"
       @page-change="handlePageChange"
+      @refresh-counts="$emit('refresh-counts')"
     />
-    <el-empty v-else-if="!loading" description="暂无@我的消息" />
-    <el-skeleton v-else :rows="5" animated />
+    <el-empty v-else description="暂无@我的消息" />
   </div>
 </template>

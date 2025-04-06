@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
  * </p>
  *
  * @author 黄毓峰
- * @since 2025-03-30
+ * @since 2025-04-06
  */
 @RestController
-@RequestMapping("/api/commentsUsers")
-public class CommentsUsersController {
-    
+@RequestMapping("/api/commentsNotificationRead")
+public class CommentsNotificationReadController {
+
 }

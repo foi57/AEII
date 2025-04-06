@@ -41,9 +41,6 @@ public class CommentsNotification implements Serializable {
     @TableField(value =  "users_id" ,typeHandler = JacksonTypeHandler.class)
     private List<Long> usersId;
 
-    @TableField("isRead")
-    private Boolean isRead;
-
     @TableField("category")
     private String category;
 

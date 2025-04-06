@@ -44,7 +44,6 @@ const loadLatest = async () => {
   const res = await article.selectArticleList(form)
   latestArticle.value = res.data.records
 
-  loadingInstances.latest?.close()
 }
 
 const loadNotice = async () => {
@@ -52,7 +51,7 @@ const loadNotice = async () => {
   await article.selectArticleList(noticeForm).then(res => {
     noticeArticle.value=res.data.records
   })
-  loadingInstances.notice?.close()
+
 }
 
 const loadAdmissions = async () => {
@@ -60,7 +59,7 @@ const loadAdmissions = async () => {
   await article.selectArticleList(admissionsInformationForm).then(res => {
     admissionsInformationArticle.value=res.data.records
   })
-  loadingInstances.admissions?.close()
+
 }
 
 const loadPolicy = async () => {

@@ -44,30 +44,38 @@ const unreadCount = () => {
   })
   
   // 获取回复我的未读数量
-  // const formData = new FormData()
-  // formData.append('usersId', userId)
-  // formData.append('category', commentNotificationCategory.replyMe)
-  // commentsNotification.countUnread(formData).then(res => {
-  //   replyMeCount.value = res.data
-  //   updateTotalCount()
-  // })
+  const formData = new FormData()
+  formData.append('usersId', userId)
+  formData.append('category', commentNotificationCategory.replyMe)
+  commentsNotification.countUnRead(formData).then(res => {
+    replyMeCount.value = res.data
+    updateTotalCount()
+  }).catch(err => {
+    console.log(err)
+  })
   
-  // // 获取@我的未读数量
-  // const atMeFormData = new FormData()
-  // atMeFormData.append('usersId', userId)
-  // atMeFormData.append('category', commentNotificationCategory.toMe)
-  // commentsNotification.countUnread(atMeFormData).then(res => {
-  //   atMeCount.value = res.data
-  //   updateTotalCount()
-  // })
+  // 获取@我的未读数量
+  const atMeFormData = new FormData()
+  atMeFormData.append('usersId', userId)
+  atMeFormData.append('category', commentNotificationCategory.toMe)
+  commentsNotification.countUnRead(atMeFormData).then(res => {
+    atMeCount.value = res.data
+    updateTotalCount()
+  }).catch(err => {
+    console.log(err)
+  })
 }
 
 // 更新总未读数
 const updateTotalCount = () => {
   unreadCounts.value = notificationCount.value + replyMeCount.value + atMeCount.value
 }
-
 onMounted(unreadCount)
+
+// 导出刷新方法，供其他组件调用
+defineExpose({
+  refreshHeardUnreadCount: unreadCount
+})
 </script>
 
 <template>
@@ -99,7 +107,7 @@ onMounted(unreadCount)
     <el-col :span="2">
       <!-- 总未读消息徽章 -->
       <el-badge :value="unreadCounts" :max="99" :hidden="unreadCounts === 0" class="notification-badge">
-        <el-dropdown trigger="click">
+        <el-dropdown>
           <div class="notification-icon">
             <el-icon size="24"><Notification /></el-icon>
             <span class="notification-text">消息</span>

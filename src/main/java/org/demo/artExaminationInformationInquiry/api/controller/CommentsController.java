@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.demo.artExaminationInformationInquiry.util.uploadFileUtil;
 
 import java.io.IOException;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 /**

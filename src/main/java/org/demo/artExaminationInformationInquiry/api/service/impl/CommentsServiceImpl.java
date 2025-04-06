@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import org.demo.artExaminationInformationInquiry.Enum.CommentsNotificationEnum;
 import org.demo.artExaminationInformationInquiry.api.entity.Comments;
+import org.demo.artExaminationInformationInquiry.api.entity.CommentsNotificationRead;
 import org.demo.artExaminationInformationInquiry.api.mapper.CommentsMapper;
+import org.demo.artExaminationInformationInquiry.api.service.ICommentsNotificationReadService;
 import org.demo.artExaminationInformationInquiry.api.service.ICommentsNotificationService;
 import org.demo.artExaminationInformationInquiry.api.service.ICommentsService;
 import org.demo.artExaminationInformationInquiry.api.service.ICommentsUsersService;
@@ -33,15 +35,20 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
     public Comments selectCommentById(Long commentId) {
         return lambdaQuery().eq(Comments::getCommentsId, commentId).one();
     }
-    ICommentsNotificationService commentsNotificationService;
-
+    
+    private final ICommentsNotificationService commentsNotificationService;
+    private final ICommentsNotificationReadService commentsNotificationReadService;
     private final IUsersService usersService;
-
     private final ICommentsUsersService commentsUsersService;
 
-    public CommentsServiceImpl(ICommentsUsersService commentsUsersService,ICommentsNotificationService commentsNotificationService,IUsersService usersService) {
+    public CommentsServiceImpl(
+            ICommentsUsersService commentsUsersService,
+            ICommentsNotificationService commentsNotificationService,
+            ICommentsNotificationReadService commentsNotificationReadService,
+            IUsersService usersService) {
         this.commentsUsersService = commentsUsersService;
         this.commentsNotificationService = commentsNotificationService;
+        this.commentsNotificationReadService = commentsNotificationReadService;
         this.usersService = usersService;
     }
 
@@ -53,6 +60,7 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
     }
 
     @Override
+    @Transactional
     public Comments insertComment(Comments comments) {
         boolean saveResult = save(comments);
         
@@ -63,18 +71,28 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
         // 通过用户名查询用户信息
         Users currentUser = usersService.selectUsersByName(username);
         Long currentUserId = currentUser.getUsersId();
+        
         if (comments.getReplyId() != null) {
             Comments replyComments = selectCommentById(comments.getReplyId());
             
             // 只有当回复的不是自己的评论时，才创建通知
             if (!replyComments.getUsersId().equals(currentUserId)) {
+                // 创建评论通知
                 CommentsNotification commentsNotification = new CommentsNotification();
                 commentsNotification.setCommentsId(replyComments.getCommentsId());
                 commentsNotification.setReplyCommentsId(comments.getCommentsId());
                 commentsNotification.setUsersId(List.of(replyComments.getUsersId()));
-                commentsNotification.setIsRead(false);
                 commentsNotification.setCategory(CommentsNotificationEnum.replyMe.name());
                 commentsNotificationService.save(commentsNotification);
+                
+                // 为每个接收通知的用户创建通知读取记录
+                for (Long userId : List.of(replyComments.getUsersId())) {
+                    CommentsNotificationRead notificationRead = new CommentsNotificationRead();
+                    notificationRead.setCommentsNotificationId(commentsNotification.getId());
+                    notificationRead.setUsersId(userId);
+                    notificationRead.setIsRead(false);
+                    commentsNotificationReadService.save(notificationRead);
+                }
             }
         }
         
@@ -85,15 +103,25 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
                 .toList();
                 
             if (!filteredUserIds.isEmpty()) {
+                // 创建评论通知
                 CommentsNotification commentsNotification = new CommentsNotification();
                 Comments replyComments = selectCommentById(comments.getReplyId());
-                if (replyComments != null)
+                if (replyComments != null) {
                     commentsNotification.setCommentsId(replyComments.getCommentsId());
+                }
                 commentsNotification.setReplyCommentsId(comments.getCommentsId());
                 commentsNotification.setUsersId(filteredUserIds);
-                commentsNotification.setIsRead(false);
                 commentsNotification.setCategory(CommentsNotificationEnum.toMe.name());
                 commentsNotificationService.save(commentsNotification);
+                
+                // 为每个接收通知的用户创建通知读取记录
+                for (Long userId : filteredUserIds) {
+                    CommentsNotificationRead notificationRead = new CommentsNotificationRead();
+                    notificationRead.setCommentsNotificationId(commentsNotification.getId());
+                    notificationRead.setUsersId(userId);
+                    notificationRead.setIsRead(false);
+                    commentsNotificationReadService.save(notificationRead);
+                }
             }
         }
         

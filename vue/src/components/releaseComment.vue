@@ -90,7 +90,8 @@ const releaseComment = async () => {
         ElMessage.success('发布成功')
         // 清空表单
         commentData.commentContent = ''
-        commentData.picture = []
+        commentData.selectedUsersId = []
+        commentData.commentImg = []
         
         // 触发事件并传递新评论数据
         emit('comment-success', res.data)
