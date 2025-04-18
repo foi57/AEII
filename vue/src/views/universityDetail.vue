@@ -1,7 +1,7 @@
 <script setup>
 import universityApi from "../../api/university.js";
 import {useRoute} from "vue-router";
-import {ref} from "vue";
+import {ref,onMounted} from "vue";
 import serverUrl from "../../serverUrl.js";
 import {Connection, Iphone, Link, Location, Message, OfficeBuilding, StarFilled, Trophy} from "@element-plus/icons-vue";
 import article from "../../api/article.js";
@@ -10,6 +10,8 @@ import {ElLoading, ElMessage} from "element-plus";
 import Header from "../components/header.vue";
 import universityCollection from "../../api/universityCollection.js";
 import {Store} from "../store/index.js";
+import {setTitle} from "../utils/titleManager.js";
+
 const userStore = Store()
 const route = useRoute();
 const universityId = route.params.id;
@@ -37,13 +39,17 @@ const getUniversity = async () => {
     })
 
    handleChange()
-
+   setTitle(university.value.universityName)
   }).catch(err => {
     console.error('获取院校信息失败:', err)
   })
 
 }
-getUniversity()
+
+onMounted(() => {
+  getUniversity()
+})
+
 
 const categories = [
   {label: '最新文章', value: ''},
@@ -215,6 +221,7 @@ selectCollection()
                 <span>{{item.articleReleased}}</span>
               </p>
             </div>
+            <div v-if="articleList.length === 0">暂无数据</div>
           </template>
           <template v-else>
             <div v-if="isLoading">加载中...</div>

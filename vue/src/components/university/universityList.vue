@@ -6,7 +6,6 @@ import {Store} from "../../store/index.js";
 import {ElMessage, ElSelectV2} from "element-plus";
 import {useRoute} from "vue-router";
 import major_university from "../../../api/major_university.js";
-import Header from "../header.vue";
 
 const props = defineProps({
   majorId: {
@@ -140,10 +139,6 @@ const featuresOptions = ref([
     value: '强基计划',
     label: '强基计划'
   },
-  {
-    value: '双高计划',
-    label: '双高计划'
-  }
 ])
 const areaOptions = ref([
   {

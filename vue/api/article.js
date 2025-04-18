@@ -53,5 +53,20 @@ export default {
                 pageSize
             }
         })
+    },
+    // 高级搜索文章
+    advancedSearchArticles(data) {
+        return request({
+            url: '/article/advancedSearch',
+            method: 'get',
+            params: {
+                keyword: data.keyword,
+                type: data.articleType,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                pageNum: data.pageNum,
+                pageSize: data.pageSize
+            }
+        })
     }
 }

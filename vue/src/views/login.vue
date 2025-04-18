@@ -34,7 +34,7 @@ const handleLogin = async () => {
 
     await router.push('/userIndex')
   } catch (error) {
-    ElMessage.error(error.response?.data?.message || '登录失败')
+    ElMessage.error(error.response?.data?.message || '用户名或密码错误')
   }
 }
 </script>
@@ -66,8 +66,9 @@ const handleLogin = async () => {
           <el-button type="primary" native-type="submit" class="login-btn">
             立即登录
           </el-button>
-          <el-link type="info" href="/register" class="register-link">没有账号？立即注册</el-link>
         </el-form-item>
+        <el-link type="info" href="/register" class="register-link">没有账号？立即注册</el-link>
+        <el-link type="info" href="/forgetPassword" class="forget-link">忘记密码</el-link>
       </el-form>
     </el-card>
   </div>
@@ -98,5 +99,8 @@ const handleLogin = async () => {
 
 .register-link {
   float: right;
+}
+.forget-link {
+  float: left;
 }
 </style>

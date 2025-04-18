@@ -7,6 +7,8 @@ import org.demo.artExaminationInformationInquiry.config.SecurityConfig.JwtTokenU
 import org.demo.artExaminationInformationInquiry.util.UsersUtil;
 import org.slf4j.Logger;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,10 +17,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
@@ -35,10 +40,18 @@ public class UsersController {
    IUsersService usersService;
    JwtTokenUtil jwtTokenUtil;
    UsersUtil usersUtil;
-   UsersController(IUsersService usersService, JwtTokenUtil jwtTokenUtil,UsersUtil usersUtil) {
+   
+   // 添加邮件发送服务
+   private final JavaMailSender mailSender;
+   
+   // 存储验证码的Map，键为邮箱，值为验证码和过期时间
+   private final Map<String, Map<String, Object>> verificationCodes = new ConcurrentHashMap<>();
+   
+   UsersController(IUsersService usersService, JwtTokenUtil jwtTokenUtil, UsersUtil usersUtil, JavaMailSender mailSender) {
       this.usersService = usersService;
-      this.jwtTokenUtil=jwtTokenUtil;
-      this.usersUtil=usersUtil;
+      this.jwtTokenUtil = jwtTokenUtil;
+      this.usersUtil = usersUtil;
+      this.mailSender = mailSender;
    }
    // 管理员登录
    @PostMapping("/login")
@@ -162,4 +175,122 @@ public class UsersController {
       Users users=usersService.selectUsersById(id);
       return ResponseEntity.ok(users);
    }
+
+   /**
+    * 发送验证码到邮箱
+    * @param email 用户邮箱
+    * @return 发送结果
+    */
+   @PostMapping("/sendVerificationCode")
+   public ResponseEntity<String> sendVerificationCode(@RequestParam("email") String email) {
+      try {
+         // 检查邮箱是否存在
+         Users user = usersService.selectUsersByEmail(email);
+         if (user == null) {
+            return ResponseEntity.status(400).body("该邮箱未注册");
+         }
+         
+         // 生成6位随机验证码
+         String verificationCode = generateVerificationCode();
+         
+         // 发送邮件
+         sendEmail(email, "密码重置验证码", "您的验证码是: " + verificationCode + "，有效期10分钟，请勿泄露给他人。");
+         
+         // 存储验证码，设置10分钟后过期
+         Map<String, Object> codeInfo = new HashMap<>();
+         codeInfo.put("code", verificationCode);
+         codeInfo.put("expireTime", System.currentTimeMillis() + 10 * 60 * 1000);
+         verificationCodes.put(email, codeInfo);
+         
+         logger.info("验证码已发送到邮箱: {}", email);
+         return ResponseEntity.ok("验证码已发送");
+      } catch (Exception e) {
+         logger.error("发送验证码失败: {}", e.getMessage());
+         return ResponseEntity.status(500).body("发送验证码失败");
+      }
+   }
+   
+   /**
+    * 重置密码
+    * @param requestBody 包含邮箱、验证码和新密码的请求体
+    * @return 重置结果
+    */
+   @PostMapping("/resetPassword")
+   public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> requestBody) {
+      String email = requestBody.get("email");
+      String verificationCode = requestBody.get("verificationCode");
+      String newPassword = requestBody.get("newPassword");
+      
+      try {
+         // 验证参数
+         if (email == null || verificationCode == null || newPassword == null) {
+            return ResponseEntity.status(400).body("参数不完整");
+         }
+         
+         // 检查邮箱是否存在
+         Users user = usersService.selectUsersByEmail(email);
+         if (user == null) {
+            return ResponseEntity.status(400).body("该邮箱未注册");
+         }
+         
+         // 验证验证码
+         Map<String, Object> codeInfo = verificationCodes.get(email);
+         if (codeInfo == null) {
+            return ResponseEntity.status(400).body("请先获取验证码");
+         }
+         
+         String storedCode = (String) codeInfo.get("code");
+         long expireTime = (long) codeInfo.get("expireTime");
+         
+         if (System.currentTimeMillis() > expireTime) {
+            verificationCodes.remove(email);
+            return ResponseEntity.status(400).body("验证码已过期");
+         }
+         
+         if (!verificationCode.equals(storedCode)) {
+            return ResponseEntity.status(400).body("验证码错误");
+         }
+         
+         // 更新密码
+         usersService.updatePassword(user.getUsersName(), newPassword);
+         
+         // 清除验证码
+         verificationCodes.remove(email);
+         
+         logger.info("用户 {} 密码重置成功", user.getUsersName());
+         return ResponseEntity.ok("密码重置成功");
+      } catch (Exception e) {
+         logger.error("重置密码失败: {}", e.getMessage());
+         return ResponseEntity.status(500).body("重置密码失败");
+      }
+   }
+   
+   /**
+    * 生成6位随机验证码
+    * @return 验证码
+    */
+   private String generateVerificationCode() {
+      Random random = new Random();
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < 6; i++) {
+         sb.append(random.nextInt(10));
+      }
+      return sb.toString();
+   }
+   
+   /**
+    * 发送邮件
+    * @param to 收件人
+    * @param subject 主题
+    * @param content 内容
+    */
+   private void sendEmail(String to, String subject, String content) {
+      SimpleMailMessage message = new SimpleMailMessage();
+      message.setFrom("2858712518@qq.com");
+      message.setTo(to);
+      message.setSubject(subject);
+      message.setText(content);
+      mailSender.send(message);
+   }
+
 }

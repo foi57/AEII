@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -22,4 +23,7 @@ public interface IArticleService extends IService<Article> {
      void updateArticle(Map<String,Object> articleMap);
      Page<Article> selectArticleListByName(String name,Integer pageNum, Integer pageSize);
      Page<Article> selectArticleListByUniversityName(String universityName,String articleType, Integer pageNum, Integer pageSize);
+     Page<Article> advancedSearchArticles(String keyword, String type, 
+                                    Date startDate, Date endDate, 
+                                    Integer pageNum, Integer pageSize);
 }

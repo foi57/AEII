@@ -28,4 +28,11 @@ public interface IUsersService extends IService<Users> {
     void updatePassword(String usersName, String usersPassword);
     Page<Users> selectUsersByNamePage(String usersName, int pageNum, int pageSize);
     Users selectUsersById(Long id);
+    
+    /**
+     * 根据邮箱查询用户
+     * @param email 邮箱
+     * @return 用户信息
+     */
+    Users selectUsersByEmail(String email);
 }

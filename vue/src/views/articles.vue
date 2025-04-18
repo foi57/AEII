@@ -3,7 +3,7 @@ import {useRoute} from "vue-router";
 import {reactive, ref} from "vue";
 import article from "../../api/article.js";
 import {ElLoading} from "element-plus";
-import university from "../../api/university.js";
+import Header from "../components/header.vue";
 const route = useRoute()
 
 const props = defineProps({
@@ -88,6 +88,8 @@ select()
 </script>
 
 <template>
+<Header/>
+
   <div>
   <h3>{{category}}</h3>
   <template v-if="!isLoading && !error">

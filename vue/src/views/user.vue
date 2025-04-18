@@ -3,7 +3,24 @@ import {ref} from "vue";
 import userCenter from "../components/userCenter.vue";
 import Header from "../components/header.vue";
 import Collection from "../components/collection.vue";
+import { useRoute } from "vue-router";
+import token from "../assets/token";
+import { Store } from "../store/index";
+const userStore = Store()
+
+const route = useRoute()
 const activeIndex = ref('0')
+if(route.params.active){
+  console.log('active',route.params.active)
+  activeIndex.value=String(route.params.active)
+}
+
+const outLogin = () => {
+  localStorage.removeItem(token.token)
+    localStorage.removeItem(token.refreshToken)
+    userStore.$reset()
+    window.location.href = '/login'
+}
 </script>
 
 <template>
@@ -19,10 +36,11 @@ const activeIndex = ref('0')
         >
           <el-menu-item index="1">个人中心</el-menu-item>
           <el-menu-item index="2">我的收藏</el-menu-item>
+          <el-menu-item index="3">退出登录</el-menu-item>
         </el-menu>
       </el-aside>
       <el-main>
-        <Component :is="activeIndex === '1' ? userCenter : activeIndex === '2' ? Collection : null"></Component>
+        <Component :is="activeIndex === '1' ? userCenter : activeIndex === '2' ? Collection : activeIndex=== '3' ? outLogin() : null"></Component>
       </el-main>
     </el-container>
   </div>

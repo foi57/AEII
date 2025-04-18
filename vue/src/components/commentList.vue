@@ -1,6 +1,6 @@
 <script setup>
-import {useRoute} from "vue-router";
-import {ref, onMounted, onBeforeUnmount, watch} from "vue"; // 添加watch
+import {useRoute, useRouter} from "vue-router";
+import {ref, onMounted, onBeforeUnmount, watch, computed} from "vue"; // 添加computed
 import comments from "../../api/comments.js";
 import { UserFilled } from '@element-plus/icons-vue'
 import serverUrl from "../../serverUrl.js"
@@ -13,8 +13,14 @@ const props = defineProps({
   refreshTrigger: {
     type: Number,
     default: 0
+  },
+  checkLogin: {
+    type: Function,
+    default: () => true
   }
 });
+
+const router = useRouter() // 添加 router
 
 watch(() => props.refreshTrigger, () => {
   // 当refreshTrigger变化时，重置页码并刷新评论列表
@@ -31,14 +37,22 @@ const formatTime = (timeStr) => {
 // 根据用户ID获取用户名（需要根据实际数据结构调整）
 const commentList = ref([])
 
-const userNames = ref({}) // 新增响应式对象存储用户名
+const userNames = ref({}) // 存储用户名缓存
+const userAvatars = ref({}) // 新增：存储用户头像缓存
 
-// 获取所有评论中的用户名称
+// 获取所有评论中的用户信息（名称和头像）
 const fetchUserNames = async () => {
   const userIds = [...new Set(commentList.value.map(c => c.usersId))];
   for (const userId of userIds) {
-    const res = await user.selectById(userId);
-    userNames.value[userId] = res.data.usersName;
+    if (!userNames.value[userId]) { // 如果缓存中没有，才去请求
+      try {
+        const res = await user.selectById(userId);
+        userNames.value[userId] = res.data.usersName;
+        userAvatars.value[userId] = res.data.usersAvatar; // 同时缓存用户头像
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+      }
+    }
   }
 }
 
@@ -63,10 +77,9 @@ const getcomments = async (isLoadMore = false) => {
     formData.append('articleId', articleId.value)
     formData.append('pageNum', currentPage.value)
     formData.append('pageSize', pageSize.value)
-    formData.append('usersId', userStore.usersId)
+    formData.append('usersId', userStore.usersId ? userStore.usersId : '')
     
     const res = await comments.selectCommentList(formData)
-    console.log(res.data)
     total.value = res.data.total
     
     if (isLoadMore) {
@@ -174,7 +187,6 @@ const handleReplay = (id,name,UserId)=>{
   toUserId.value = UserId
   isReply.value = true
   isUserTyping.value = true // 设置标志位，表示用户将要输入
-  console.log('回复', id, name, isReply.value, 'toUserId', toUserId.value)
   
   scrollPosition.value = window.scrollY
   handleUserTyping(true)
@@ -187,8 +199,11 @@ const handleReplay = (id,name,UserId)=>{
 
 // 在handleCommentSuccess中也需要重置标志位
 const handleCommentSuccess = (newComment) => {
-  // 关闭评论输入框
-  console.log('关闭评论输入框')
+ 
+  if (!props.checkLogin()) {
+    return
+  }
+   // 关闭评论输入框
   isReply.value = false
   handleUserTyping(false)
   
@@ -210,10 +225,11 @@ const handleCommentSuccess = (newComment) => {
       commentList.value.unshift(newComment)
     }
     
-    // 更新用户名缓存
+    // 更新用户名和头像缓存
     if (newComment.usersId && !userNames.value[newComment.usersId]) {
       user.selectById(newComment.usersId).then(res => {
         userNames.value[newComment.usersId] = res.data.usersName
+        userAvatars.value[newComment.usersId] = res.data.usersAvatar // 同时缓存用户头像
       })
     }
   }
@@ -244,6 +260,10 @@ const handleDelete = async (commentId, userId) => {
 
 // 添加点赞功能
 const handleThumbsUp = async (commentId, isThumbsUp) => {
+   // 检查登录状态
+   if (!props.checkLogin()) {
+    return
+  }
   try {
     const formData = new FormData()
     formData.append('commentId', commentId)
@@ -299,8 +319,8 @@ const isUserThumbsUp = (comment) => {
       <div class="comment-header">
 
         <el-avatar
-            :src="`${serverUrl.url}/users/avatar/${comment.usersAvatar}`"
-            v-if="comment.usersAvatar"
+            :src="`${serverUrl.url}/users/avatar/${userAvatars[comment.usersId]}`"
+            v-if="userAvatars[comment.usersId]"
         />
         <el-avatar v-else :icon="UserFilled" />
         <span>{{ userNames[comment.usersId]}}</span>
@@ -369,8 +389,8 @@ const isUserThumbsUp = (comment) => {
              class="sub-comment-item">
           <div class="sub-comment-header">
             <el-avatar
-                :src="`${serverUrl.url}/users/avatar/${subComment.usersAvatar}`"
-                v-if="subComment.usersAvatar"
+                :src="`${serverUrl.url}/users/avatar/${userAvatars[subComment.usersId]}`"
+                v-if="userAvatars[subComment.usersId]"
                 :size="30"
             />
             <el-avatar v-else :icon="UserFilled" :size="30" />

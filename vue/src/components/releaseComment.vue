@@ -1,23 +1,33 @@
 <script setup>
 
 import serverUrl from "../../serverUrl.js";
-import {UserFilled} from "@element-plus/icons-vue";
+import {UserFilled, Picture} from "@element-plus/icons-vue"; // 添加 Picture 图标导入
 import {Store} from "../store/index.js";
-import {ref, reactive, onBeforeUnmount} from "vue";
+import {ref, reactive, onBeforeUnmount, computed, onMounted, watch} from "vue"; // 添加 watch
 import comments from "../../api/comments.js";
 import {ElMessage} from "element-plus";
 import user from "../../api/user.js";
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const props = defineProps({
   replyId: Number,
   replyName: String,
   toUserId: Number,
   articleId: Number,
+  checkLogin: {
+    type: Function,
+    default: () => true
+  }
 })
+
+// 添加字数限制常量
+const MAX_COMMENT_LENGTH = 500 // 最大字数限制
+
+const route = useRoute()
+const router = useRouter()
 const articleId = ref(null)
-if(useRoute().params.id)
- articleId.value = useRoute().params.id
+if(route.params.id)
+ articleId.value = route.params.id
 else{
   articleId.value = props.articleId
 }
@@ -31,6 +41,37 @@ const commentData = reactive({
   toUserOptions: [],
   articleId: articleId.value,
   selectedUsersId: [] // 新增选中用户存储
+})
+
+// 计算剩余可输入字数
+const remainingChars = computed(() => {
+  return MAX_COMMENT_LENGTH - commentData.commentContent.length
+})
+
+// 检查是否超出字数限制
+const isOverLimit = computed(() => {
+  return remainingChars.value < 0
+})
+
+// 监听评论内容变化，超出字数限制时截断
+watch(() => commentData.commentContent, (newVal) => {
+  if (newVal.length > MAX_COMMENT_LENGTH) {
+    commentData.commentContent = newVal.substring(0, MAX_COMMENT_LENGTH)
+    ElMessage.warning(`评论内容不能超过${MAX_COMMENT_LENGTH}字`)
+  }
+})
+
+// 检查用户是否已登录
+const isLoggedIn = computed(() => {
+  return !!userStore.usersId && !!localStorage.getItem('accessToken')
+})
+
+// 在组件挂载时检查登录状态
+onMounted(() => {
+  if (!isLoggedIn.value && commentData.commentContent) {
+    ElMessage.warning('请先登录')
+    router.push('/login')
+  }
 })
 
 if(props.toUserId){
@@ -156,6 +197,50 @@ const handleInputFocus = () => {
 const handleInputBlur = () => {
   emit('userTyping', false)
 }
+// 修改发布评论方法
+const publishComment = async () => {
+  // 检查登录状态
+  if (!props.checkLogin()) {
+    return
+  }
+  
+  if (!commentData.commentContent.trim()) {
+    ElMessage.warning('评论内容不能为空')
+    return
+  }
+  
+  // 检查字数是否超出限制
+  if (isOverLimit.value) {
+    ElMessage.warning(`评论内容不能超过${MAX_COMMENT_LENGTH}字`)
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('content', commentData.commentContent)
+  formData.append('usersId', commentData.commentUserId)
+  formData.append('picture', commentData.commentImg)
+  formData.append('toUsersId', commentData.selectedUsersId)
+  formData.append('articleId', commentData.articleId)
+  if (props.replyId) {
+    formData.append('replyId', props.replyId)
+  }   
+    try {
+      const res = await comments.insertComment(formData)
+      if (res.data) {
+        ElMessage.success('发布成功')
+        // 清空表单
+        commentData.commentContent = ''
+        commentData.selectedUsersId = []
+        commentData.commentImg = []
+        
+        // 触发事件并传递新评论数据
+        emit('comment-success', res.data)
+      }
+    } catch (err) {
+      console.error('评论发布失败:', err)
+      ElMessage.error('评论发布失败')
+    }
+  }
 </script>
 
 <template>
@@ -165,20 +250,24 @@ const handleInputBlur = () => {
       <el-avatar v-if="userAvatar === null" :icon="UserFilled" />
     </el-col>
     <el-col :span="20">
-      <el-mention
-          whole
-          v-model="commentData.commentContent"
-          type="textarea"
-          :options="commentData.toUserOptions"
-          :placeholder="props.replyName ?  `回复 ${props.replyName}:` : '发表评论'"
-          @search="fetchUsers"
-          @select="handleUserSelect"
-          :loading="loading"
-          value-key="value"
-          @focus="handleInputFocus"
-          @blur="handleInputBlur"
-          @input="handleInputFocus"
-      />
+      <div class="comment-input-container">
+        <el-mention
+            whole
+            v-model="commentData.commentContent"
+            type="textarea"
+            :options="commentData.toUserOptions"
+            :placeholder="props.replyName ?  `回复 ${props.replyName}:` : '发表评论'"
+            @search="fetchUsers"
+            @select="handleUserSelect"
+            :loading="loading"
+            value-key="value"
+            @focus="handleInputFocus"
+            @blur="handleInputBlur"
+            @input="handleInputFocus"
+            maxlength="500"
+            show-word-limit
+        />
+      </div>
     </el-col>
   </el-row>
   <el-row>
@@ -202,7 +291,15 @@ const handleInputBlur = () => {
     <el-col :span="4" class="commentPlus">
       <span @click="handleIsUploadImg"><el-icon><Picture/></el-icon></span>
     </el-col>
-    <el-col :span="2"><el-button type="primary" @click="releaseComment">发表</el-button></el-col>
+    <el-col :span="2">
+      <el-button 
+        type="primary" 
+        @click="publishComment" 
+        :disabled="isOverLimit || !commentData.commentContent.trim()"
+      >
+        发表
+      </el-button>
+    </el-col>
   </el-row>
 </template>
 
@@ -213,5 +310,27 @@ const handleInputBlur = () => {
 .commentPlus span:hover{
   cursor: pointer;
   color: #409eff;
+}
+
+.comment-input-container {
+  position: relative;
+}
+
+.char-counter {
+  position: absolute;
+  bottom: -20px;
+  right: 10px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.over-limit {
+  color: #F56C6C;
+  font-weight: bold;
+}
+
+/* 确保文本域有足够的底部边距以显示字数计数器 */
+:deep(.el-textarea__inner) {
+  margin-bottom: 20px;
 }
 </style>

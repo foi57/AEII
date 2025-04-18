@@ -80,9 +80,10 @@ const routes = [
     component: () => import('../views/register.vue')
   },
   {
-    path: '/user',
+    path: '/user/:active',
     name: 'user',
-    component: () => import('../views/user.vue')
+    component: () => import('../views/user.vue'),
+    props: true
   },
   {
     path: '/collection',
@@ -94,6 +95,16 @@ const routes = [
     name: 'notification',
     component: () => import('../views/notification.vue'),
     props: true
+  },
+  {
+    path: '/articleSearch',
+    name: 'articleSearch',
+    component: () => import('../views/articleSearch.vue')  
+  },
+  {
+    path: '/forgetPassword',
+    name: 'forgetPassword',
+    component: () => import('../views/forgetPassword.vue')
   }
 ];
 

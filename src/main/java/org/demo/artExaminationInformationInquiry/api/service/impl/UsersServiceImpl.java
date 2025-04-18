@@ -87,4 +87,9 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
     public Users selectUsersById(Long id) {
         return lambdaQuery().eq(Users::getUsersId, id).one();
     }
+
+    @Override
+    public Users selectUsersByEmail(String email) {
+        return lambdaQuery().eq(Users::getUsersEmail, email).one();
+    }
 }

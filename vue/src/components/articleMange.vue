@@ -4,6 +4,8 @@ import {Store} from "../store/index.js";
 import article from "../../api/article.js";
 import {ElAutoResizer, ElMessage,ElTableV2 } from "element-plus";
 import router from "../router/index.js";
+import articleCategories from "../assets/articleCategories.js"
+
 onMounted(() => {
   handleChange()
 })
@@ -12,14 +14,10 @@ const pageSize3 = ref(50);
 const count = ref(100);
 const disabled = ref(false);
 const userStore = Store();
-const categories = [
-  {label: '全部', value: ''},
-  {label: '我发布的', value: 'myPublish'},
-  { label: '招生信息', value: 'admissionsInformation' },
-  { label: '考试通知', value: 'notice' },
-  { label: '政策解读', value: 'policy' },
-  { label: '备考指南', value: 'guide' }
-]
+const categories = articleCategories.categories
+// 导入格式化函数
+const formatArticleType = articleCategories.formatArticleCategories
+
 const form = reactive({
   articleTitle: '',
   articleType: '',
@@ -67,7 +65,9 @@ const columns = ref([
     key: 'articleType',
     dataKey: 'articleType',
     title: '文章类型',
-    width: 150
+    width: 150,
+    // 修改这里，使用 formatArticleType 函数将英文类型转换为中文显示
+    cellRenderer: ({ rowData }) => h('span', {}, formatArticleType(rowData.articleType))
   },
   {
     key: 'userName',

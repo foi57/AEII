@@ -192,4 +192,37 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 .orderByDesc(Article::getArticleReleased)
                 .page(new Page<>(pageNum, pageSize));
     }
+
+    @Override
+    public Page<Article> advancedSearchArticles(String keyword, String type, 
+                                              Date startDate, Date endDate, 
+                                              Integer pageNum, Integer pageSize) {
+        Page<Article> page = new Page<>(pageNum, pageSize);
+        
+        // 构建查询条件
+        page = lambdaQuery()
+                // 如果有指定类型，则添加类型过滤
+                .like(type != null && !type.isEmpty(), Article::getArticleType, type)
+                // 在标题或内容中搜索关键词
+                .and(keyword != null && !keyword.isEmpty(), wrapper -> wrapper
+                    .like(Article::getArticleTitle, keyword)
+                    .or()
+                    .like(Article::getArticleContent, keyword)
+                )
+                // 添加时间范围过滤
+                .ge(startDate != null, Article::getArticleReleased, startDate)
+                .le(endDate != null, Article::getArticleReleased, endDate)
+                .orderByDesc(Article::getArticleReleased)
+                .page(page);
+        
+        // 补充用户信息
+        page.getRecords().forEach(article -> {
+            Users user = usersMapper.selectById(article.getArticleSource());
+            if (user != null) {
+                article.setUserName(user.getUsersName());
+            }
+        });
+        
+        return page;
+    }
 }

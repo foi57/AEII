@@ -1,9 +1,13 @@
 <script setup>
 import article from "../../api/article.js";
-import {reactive, ref, toRefs} from "vue";
-import {ElLoading} from "element-plus";
+import {reactive, ref, toRefs, onMounted, onBeforeUnmount} from "vue";
 import {Store} from "../store/index.js";
 import Header from "../components/header.vue";
+import { useRouter } from 'vue-router'; // 导入路由
+import { Search } from '@element-plus/icons-vue'; // 导入搜索图标
+import ArtExamCalendar from "../components/ArtExamCalendar.vue"; // 导入艺考月历组件
+
+const router = useRouter(); // 使用路由
 const userStore = Store();
 const form = reactive({
   articleTitle: '',
@@ -95,6 +99,54 @@ const handleCommand = (command) => {
     window.location.href = '/user'
   }
 }
+
+const articleForm = reactive({
+  articleTitle: '',
+  articleType: '',
+  pageNum: 1, 
+  pageSize: 10,
+})
+
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+let searchResults = ref([]);
+const querySearch = debounce(async (queryString, cb) => {
+  if (queryString) {
+    try {
+      const res = await article.selectArticleList(articleForm)
+       searchResults.value = res.data.records.map(item => {
+        return { value: item.articleTitle, ...item };
+      });
+      cb(searchResults.value);
+    } catch (error) {
+      cb([]);
+    }
+  } else {
+    cb([]);
+  }
+},500)
+
+// 处理搜索结果选择
+const handleSelect = (item) => {
+  router.push(`/article/detail/${item.articleId}`);
+}
+
+// 执行搜索并跳转到搜索页面
+const performSearch = () => {
+
+    router.push({
+      path: '/articleSearch',
+      query: { keyword: articleForm.articleTitle }
+    });
+  
+}
+
 </script>
 
 <template>
@@ -103,6 +155,26 @@ const handleCommand = (command) => {
       <Header/>
     </el-header>
     <el-main>
+      <el-row>
+        <el-col :span="16" :offset="4" class="search-container">
+          <el-autocomplete
+            v-model="articleForm.articleTitle"
+            placeholder="搜索文章"
+            :fetch-suggestions="querySearch"
+            @select="handleSelect"
+            @keyup.enter="performSearch"
+            class="search-input"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+            <template #append>
+              <el-button @click="performSearch">搜索</el-button>
+            </template>
+          </el-autocomplete>
+          <el-button @click="performSearch">高级搜索</el-button>
+        </el-col>
+      </el-row>
       <el-row>
         <el-col :span="24">
           <div class="banner">
@@ -113,6 +185,8 @@ const handleCommand = (command) => {
           </div>
         </el-col>
       </el-row>
+      
+    
 
       <div class="latestArticle">
       <div class="latestArticle-block">
@@ -198,6 +272,14 @@ const handleCommand = (command) => {
           <div v-else class="error-text">数据加载失败，请稍后重试</div>
         </div>
       </div>
+
+        <!-- 添加艺考月历组件 -->
+        <el-row>
+        <el-col :span="24">
+          <ArtExamCalendar />
+        </el-col>
+      </el-row>
+      
     </el-main>
   </el-container>
 

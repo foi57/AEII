@@ -7,6 +7,8 @@ import org.demo.artExaminationInformationInquiry.api.entity.Article;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleService;
 import org.demo.artExaminationInformationInquiry.api.service.IArticleUniversityService;
 import org.slf4j.Logger;
+import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -120,7 +123,9 @@ public class ArticleController {
         String articleType=(String) article.get("articleType");
         int pageNum=(Integer) article.get("pageNum");
         int pageSize=(Integer) article.get("pageSize");
-       logger.debug("universityId: {} articleType: {} pageNum: {} pageSize: {}", universityId, articleType, pageNum, pageSize);
+        Data startData =(Data) article.get("startDate");
+        Data endData =(Data) article.get("endDate");
+        logger.debug("articleTitle: {} universityId: {} articleType: {} pageNum: {} pageSize: {} startData: {} endData: {}", articleTitle, universityId, articleType, pageNum, pageSize, startData, endData);
         if (articleType.equals("myPublish")){
             return ResponseEntity.ok(articleService.selectArticleListByUserId(articleTitle,universityId,pageNum,pageSize));
         }else {
@@ -172,5 +177,18 @@ public class ArticleController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("文件上传失败");
         }
+    }
+    /**
+     * 高级搜索文章
+     */
+    @GetMapping("/advancedSearch")
+    public Page<Article> advancedSearchArticles(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize) {
+        return articleService.advancedSearchArticles(keyword, type, startDate, endDate, pageNum, pageSize);
     }
 }

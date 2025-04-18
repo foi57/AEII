@@ -1,5 +1,4 @@
 <script setup>
-import Header from './header.vue'
 import {ref} from "vue";
 import CollectionUniversity from "./university/collectionUniversity.vue";
 
@@ -10,7 +9,7 @@ const handleSelect = (index) => {
 </script>
 
 <template>
-<Header/>
+
   <el-header>
     <el-menu
       :default-active="activeIndex"

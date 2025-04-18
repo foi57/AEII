@@ -13,6 +13,14 @@ spring:
     username: root
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: 2858712518@qq.com
+    password: lzbticyvndvddecd
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
 jwt:
   secret: yourjwtsecretkeydsafsafdadafgsgkmld9430jfow8ty382jwfoibewgfnmdsi983wdmaliskbdfi3qgdjpjajdkjlagsyjd8i2q8odp9jawbdbais
   expiration: 3600

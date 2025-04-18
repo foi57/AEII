@@ -7,14 +7,15 @@ import {onMounted, ref} from "vue";
 import comments from "../../api/comments.js";
 import commentsNotification from "../../api/commentsNotification.js";
 import commentNotificationCategory from "../assets/commentNotificationCategory.js";
+import token from "../assets/token.js";
 
 const userStore = Store();
 const userAvatar = userStore.usersAvatar;
 const userName = userStore.usersName;
 const handleCommand = (command) => {
   if (command === 'c') {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
+    localStorage.removeItem(token.token)
+    localStorage.removeItem(token.refreshToken)
     userStore.$reset()
     window.location.href = '/login'
   }
@@ -22,9 +23,9 @@ const handleCommand = (command) => {
     window.location.href = '/login'
   }
   else if (command === 'a') {
-    window.location.href = '/user'
+    window.location.href = '/user/1'
   }else if (command === 'b') {
-    window.location.href = '/collection'
+    window.location.href = '/user/2'
   }
 }
 const unreadCounts = ref(0)

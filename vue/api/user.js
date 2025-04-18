@@ -114,5 +114,26 @@ export default {
                 id: id
             }
         })
+    },
+    // 添加以下方法到现有的 user.js 文件中
+    
+    // 发送验证码
+    sendVerificationCode(email) {
+        return request({
+            url: '/users/sendVerificationCode',
+            method: 'post',
+            params: {
+                email: email
+            }
+        })
+    },
+    
+    // 重置密码
+    resetPassword(data) {
+        return request({
+            url: '/users/resetPassword',
+            method: 'post',
+            data
+        })
     }
 }
