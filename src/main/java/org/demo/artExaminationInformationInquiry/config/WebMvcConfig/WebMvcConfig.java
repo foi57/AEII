@@ -1,6 +1,4 @@
 package org.demo.artExaminationInformationInquiry.config.WebMvcConfig;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -19,6 +17,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations("file:" + System.getProperty("user.dir") + "/file/user/");
         registry.addResourceHandler("/comments/images/**")
                 .addResourceLocations("file:" + System.getProperty("user.dir") + "/file/comment/");
+        registry.addResourceHandler("/carousel/images/**")
+               .addResourceLocations("file:" + System.getProperty("user.dir") + "/file/carousel/");
     }
 
 

@@ -2,12 +2,16 @@ package org.demo.artExaminationInformationInquiry.api.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
+import org.demo.artExaminationInformationInquiry.api.entity.MajorCount;
 import org.demo.artExaminationInformationInquiry.api.service.IMajorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 /**
  * <p>
@@ -51,4 +55,9 @@ public class MajorController {
         logger.debug("universityId: {}", universityId);
         return majorService.selectMajorListByUniversityId(universityId);
     }
+    @GetMapping("/selectMajorListCount")
+    public List<MajorCount> selectMajorListCount() {
+        return majorService.selectMajorListCount();
+    }
+    
 }

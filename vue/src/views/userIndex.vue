@@ -1,112 +1,174 @@
 <script setup>
-import article from "../../api/article.js";
-import {reactive, ref, toRefs, onMounted, onBeforeUnmount} from "vue";
-import {Store} from "../store/index.js";
+// ... 现有 imports ...
+import { ElCard, ElSkeleton, ElRow, ElCol, ElEmpty, ElResult, ElLink } from 'element-plus'; // 引入所需组件
 import Header from "../components/header.vue";
-import { useRouter } from 'vue-router'; // 导入路由
-import { Search } from '@element-plus/icons-vue'; // 导入搜索图标
-import ArtExamCalendar from "../components/ArtExamCalendar.vue"; // 导入艺考月历组件
+import ArtExamCalendar from "../components/ArtExamCalendar.vue";
+import serverUrl from '../../serverUrl';
+import article from "../../api/article.js";
+import carousel from "../../api/carousel.js";
+import hotArticle from "../../api/hotArticle.js";
+import { reactive, ref, nextTick, onMounted } from "vue";
+import { useRouter } from 'vue-router';
+import { Search } from '@element-plus/icons-vue';
+import * as echarts from 'echarts'; // 引入 ECharts
+import majorApi from '../../api/major.js'; // 确保路径正确
 
-const router = useRouter(); // 使用路由
-const userStore = Store();
-const form = reactive({
+const router = useRouter();
+
+// --- 加载状态和错误处理 ---
+const isLoading = ref(true); // 初始设为 true
+const error = ref(null); // 存储错误信息
+
+// --- 数据引用 ---
+const carouselItems = ref([]);
+const HotArticles = ref([]);
+const latestArticle = ref([]);
+const noticeArticle = ref([]);
+const admissionsInformationArticle = ref([]);
+const policyArticle = ref([]);
+const guideArticle = ref([]);
+
+// 新增：图表容器的 ref
+const majorChartContainer = ref(null);
+
+// --- 表单定义 ---
+const baseForm = {
   articleTitle: '',
   articleType: '',
   pageNum: 1,
-  pageSize: 10,
-})
+  pageSize: 10, // 首页可以适当减少 pageSize，比如 5 或 6
+};
 
-// 添加加载状态
-const isLoading = ref(false)
-const error = ref(null)
-let latestArticle = ref([])
-let noticeArticle = ref([])
-let admissionsInformationArticle = ref([])
-let policyArticle = ref([])
-let guideArticle = ref([])
-const noticeForm = reactive({
-  ...toRefs(form),
-  articleType: 'notice'
-})
-const admissionsInformationForm = reactive({
-  ...toRefs(form),
-  articleType: 'admissionsInformation'
-})
-const policyForm = reactive({
- ...toRefs(form),
-  articleType: 'policy'
-})
-const guideForm = reactive({
-  ...toRefs(form),
-  articleType: 'guide'
-})
+const articleForm = reactive({ ...baseForm }); // 用于搜索框
+const latestForm = reactive({ ...baseForm }); // 最新文章
+const noticeForm = reactive({ ...baseForm, articleType: 'notice' });
+const admissionsInformationForm = reactive({ ...baseForm, articleType: 'admissionsInformation' });
+const policyForm = reactive({ ...baseForm, articleType: 'policy' });
+const guideForm = reactive({ ...baseForm, articleType: 'guide' });
 
-
-const loadLatest = async () => {
-
-
-  const res = await article.selectArticleList(form)
-  latestArticle.value = res.data.records
-
-}
-
-const loadNotice = async () => {
-
-  await article.selectArticleList(noticeForm).then(res => {
-    noticeArticle.value=res.data.records
-  })
-
-}
-
-const loadAdmissions = async () => {
-
-  await article.selectArticleList(admissionsInformationForm).then(res => {
-    admissionsInformationArticle.value=res.data.records
-  })
-
-}
-
-const loadPolicy = async () => {
-
-  await article.selectArticleList(policyForm).then(res => {
-    policyArticle.value=res.data.records
-  })
-}
-
-const loadGuide = async () => {
-
-  await article.selectArticleList(guideForm).then(res => {
-    guideArticle.value=res.data.records
-  })
-}
-
-loadLatest()
-loadNotice()
-loadAdmissions()
-loadPolicy()
-loadGuide()
-const handleCommand = (command) => {
-  if (command === 'c') {
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
-    userStore.$reset()
-    window.location.href = '/login'
+// --- 数据加载函数 ---
+const loadData = async (apiCall, form, targetRef) => {
+  try {
+    const res = await apiCall(form);
+    targetRef.value = res.data.records || res.data; // 兼容不同接口返回格式
+  } catch (err) {
+    console.error(`加载 ${form.articleType || '数据'} 失败:`, err);
+    // 可以选择性地为每个部分设置错误状态，或统一处理
+    error.value = error.value || "部分数据加载失败"; // 记录第一个发生的错误
+    targetRef.value = []; // 清空数据
   }
-  else if (command === 'd') {
-    window.location.href = '/login'
-  }
-  else if (command === 'a') {
-    window.location.href = '/user'
-  }
-}
+};
 
-const articleForm = reactive({
-  articleTitle: '',
-  articleType: '',
-  pageNum: 1, 
-  pageSize: 10,
-})
+const loadLatest = () => loadData(article.selectArticleList, latestForm, latestArticle);
+const loadNotice = () => loadData(article.selectArticleList, noticeForm, noticeArticle);
+const loadAdmissions = () => loadData(article.selectArticleList, admissionsInformationForm, admissionsInformationArticle);
+const loadPolicy = () => loadData(article.selectArticleList, policyForm, policyArticle);
+const loadGuide = () => loadData(article.selectArticleList, guideForm, guideArticle);
+const loadCarousel = () => loadData(carousel.getCarouselList, {}, carouselItems); // 无需表单
+const loadHotArticles = () => loadData(hotArticle.getHotArticleList, {}, HotArticles); // 无需表单
+// 新增：加载并渲染专业院校数量图表的方法
+const loadMajorUniversityChart = async () => {
+  if (!majorChartContainer.value) {
+    console.error("图表容器尚未准备好");
+    return;
+  }
 
+  try {
+    // 假设 majorApi.getMajorUniversityCounts() 返回所需数据
+    // 格式: [{ majorName: '专业A', count: 10 }, ...]
+    const res = await majorApi.selectMajorListCount();
+    const chartData = res.data; // 假设接口返回的数据结构
+
+    if (!chartData || chartData.length === 0) {
+      console.warn("没有获取到专业院校数量数据");
+      // 可以选择显示一个空状态
+      return;
+    }
+
+    // 准备 ECharts 配置项
+    const majorNames = chartData.map(item => item.majorName);
+    const counts = chartData.map(item => item.count);
+
+    const myChart = echarts.init(majorChartContainer.value);
+    const option = {
+      title: {
+        text: '各艺术类专业开设院校数量统计',
+        left: 'center'
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01]
+      },
+      yAxis: {
+        type: 'category',
+        data: majorNames // 专业名称作为 Y 轴
+      },
+      series: [
+        {
+          name: '开设院校数量',
+          type: 'bar', // 设置为柱状图
+          data: counts // 院校数量作为数据
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+
+    // 添加窗口大小调整监听
+    window.addEventListener('resize', () => {
+      myChart.resize();
+    });
+
+  } catch (err) {
+    console.error("加载专业院校数量图表失败:", err);
+    // 可以显示错误提示
+  }
+};
+// --- 生命周期钩子 ---
+onMounted(async () => {
+  isLoading.value = true;
+  error.value = null; // 重置错误状态
+  try {
+    await Promise.all([ // 并行加载所有数据
+      loadLatest(),
+      loadNotice(),
+      loadAdmissions(),
+      loadPolicy(),
+      loadGuide(),
+      loadCarousel(),
+      loadHotArticles(),
+      await nextTick(),
+      loadMajorUniversityChart() // 加载专业院校数量图表
+    ]);
+  } catch (err) {
+    // Promise.all 如果有任何一个 reject，会进入 catch
+    // 具体的错误已在 loadData 中处理，这里可以再记录一个总体错误
+    console.error("首页数据加载过程中发生错误:", err);
+    if (!error.value) { // 如果 loadData 内部没有设置错误信息
+        error.value = "首页数据加载失败，请稍后重试";
+    }
+  } finally {
+    isLoading.value = false; // 结束加载
+  }
+});
+
+const toDetail = (articleId) => {
+  // ... existing code ...
+};
+
+// --- 搜索相关 ---
 function debounce(fn, delay) {
   let timer;
   return function (...args) {
@@ -118,33 +180,43 @@ function debounce(fn, delay) {
 let searchResults = ref([]);
 const querySearch = debounce(async (queryString, cb) => {
   if (queryString) {
+    articleForm.articleTitle = queryString; // 更新搜索表单
     try {
-      const res = await article.selectArticleList(articleForm)
-       searchResults.value = res.data.records.map(item => {
-        return { value: item.articleTitle, ...item };
+      // 注意：这里的 articleForm 可能没有指定 articleType，会搜索所有类型
+      const res = await article.selectArticleList(articleForm);
+      searchResults.value = res.data.records.map(item => {
+        return { value: item.articleTitle, ...item }; // 返回 Autocomplete 需要的格式
       });
       cb(searchResults.value);
     } catch (error) {
+      console.error('获取搜索建议失败:', error);
       cb([]);
     }
   } else {
     cb([]);
   }
-},500)
+}, 500);
 
-// 处理搜索结果选择
 const handleSelect = (item) => {
-  router.push(`/article/detail/${item.articleId}`);
-}
+  if (item && item.articleId) {
+    router.push(`/article/detail/${item.articleId}`);
+  }
+};
 
-// 执行搜索并跳转到搜索页面
 const performSearch = () => {
-
+  if (articleForm.articleTitle.trim()) {
     router.push({
       path: '/articleSearch',
-      query: { keyword: articleForm.articleTitle }
+      query: { keyword: articleForm.articleTitle.trim() }
     });
-  
+  }
+};
+
+// 跳转到高级搜索页面的函数
+const goToAdvancedSearch = () => {
+  router.push('/articleSearch?advanced=true'); // 假设用查询参数区分
+  // 或者直接跳转到高级搜索组件所在的路由（如果它是一个独立页面）
+  // router.push('/advanced-search');
 }
 
 </script>
@@ -155,234 +227,349 @@ const performSearch = () => {
       <Header/>
     </el-header>
     <el-main>
-      <el-row>
-        <el-col :span="16" :offset="4" class="search-container">
-          <el-autocomplete
-            v-model="articleForm.articleTitle"
-            placeholder="搜索文章"
-            :fetch-suggestions="querySearch"
-            @select="handleSelect"
-            @keyup.enter="performSearch"
-            class="search-input"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-            <template #append>
-              <el-button @click="performSearch">搜索</el-button>
-            </template>
-          </el-autocomplete>
-          <el-button @click="performSearch">高级搜索</el-button>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :span="24">
-          <div class="banner">
-            <div class="banner-content">
-              <h1>欢迎来到中国艺考信息网</h1>
-              <p>中国艺考信息网是一个为中国艺考生生提供考试信息、招生信息、政策解读、备考指南、院校信息、艺术专业等服务的网站。</p>
-            </div>
+  
+      <!-- 轮播图和热门文章 -->
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="16"> <!-- 响应式布局 -->
+          <div class="carousel-container">
+            <el-skeleton :loading="isLoading" animated>
+              <template #template>
+                <el-skeleton-item variant="image" style="width: 100%; height: 400px;" />
+              </template>
+              <template #default>
+                <el-carousel :interval="5000" height="400px" v-if="carouselItems.length > 0">
+                  <el-carousel-item v-for="item in carouselItems" :key="item.id">
+                    <div class="carousel-content">
+                      <a :href="item.link" target="_blank" v-if="item.link">
+                        <img :src="`${serverUrl.url}/carousel/images/${item.picture}`" alt="轮播图" class="carousel-image">
+                      </a>
+                      <img v-else :src="`${serverUrl.url}/carousel/images/${item.picture}`" alt="轮播图" class="carousel-image">
+                    </div>
+                  </el-carousel-item>
+                </el-carousel>
+                <el-empty description="暂无轮播内容" v-else />
+              </template>
+            </el-skeleton>
           </div>
         </el-col>
+        <el-col :xs="24" :sm="8"> <!-- 响应式布局 -->
+          <el-card class="hot-article-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>热门文章</span>
+                <!-- 可以添加图标或链接 -->
+              </div>
+            </template>
+            <el-skeleton :rows="5" animated :loading="isLoading" />
+            <template v-if="!isLoading">
+              <div v-if="HotArticles.length > 0">
+                <div v-for="(item, index) in HotArticles" :key="item.articleId" class="hot-article-item">
+                   <!-- 使用 el-link 增加样式统一性 -->
+                   <el-link :href="`/article/detail/${item.articleId}`" target="_blank" class="hot-index">
+                     <!-- 可以考虑添加序号 -->
+                     <!-- <span class="hot-index">{{ index + 1 }}</span> -->
+                     {{ item.articleTitle }}
+                   </el-link>
+                </div>
+              </div>
+              <el-empty description="暂无热门文章" v-else />
+            </template>
+          </el-card>
+        </el-col>
       </el-row>
-      
-    
 
-      <div class="latestArticle">
-      <div class="latestArticle-block">
-        <h3>最新文章<span class="moreArticle"><el-link :href="`/articles/最新文章`">》更多</el-link></span></h3>
-        <template v-if="!isLoading && !error">
-          <div v-for="(item, index) in latestArticle" :key="index">
-            <p>
-              <el-link
-                  :href="`/article/detail/${item.articleId}`"
-                  target="_blank"
-              >{{ item.articleTitle }}</el-link>
-              <span>{{item.articleReleased}}</span>
-            </p>
+  <!-- 新增：专业院校数量图表 -->
+  <el-card class="box-card chart-card" style="margin-top: 20px;">
+           <template #header>
+             <div class="card-header">
+               <span>专业热度分析</span>
+             </div>
+           </template>
+           <div ref="majorChartContainer" style="width: 100%; height: 600px;"></div>
+        </el-card>
+
+      <!-- 最新文章 -->
+      <el-card class="article-section-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <span>最新文章</span>
+            <el-link :href="`/articles/最新文章`" type="primary" class="more-link">更多 &gt;</el-link>
           </div>
         </template>
-        <div v-else-if="isLoading" class="loading-text">数据加载中...</div>
-        <div v-else class="error-text">数据加载失败，请稍后重试</div>
-      </div>
-    </div>
-      <div class="categoryArticle">
-        <div class="notice-block">
-          <template v-if="!isLoading && !error">
-            <h3>考试通知<span class="moreArticle"><el-link :href="`/articles/考试通知`">》更多</el-link></span></h3>
-            <div v-for="(item, index) in noticeArticle" :key="index">
-              <p>
-                <el-link
-                    :href="`/article/detail/${item.articleId}`"
-                    target="_blank"
-                >{{ item.articleTitle }}</el-link>
-                <span>{{item.articleReleased}}</span>
-              </p>
+        <el-skeleton :rows="5" animated :loading="isLoading" />
+        <template v-if="!isLoading">
+          <div v-if="latestArticle.length > 0">
+            <div v-for="(item, index) in latestArticle" :key="index" class="article-item">
+              <el-link :href="`/article/detail/${item.articleId}`" target="_blank">{{ item.articleTitle }}</el-link>
+              <span class="article-date">{{ item.articleReleased }}</span>
             </div>
-          </template>
-          <div v-else-if="isLoading" class="loading-text">数据加载中...</div>
-          <div v-else class="error-text">数据加载失败，请稍后重试</div>
-        </div>
-        <div class="admissionsInformation-block">
-          <template v-if="!isLoading &&!error">
-            <h3>招生信息<span class="moreArticle"><el-link :href="`/articles/招生信息`">》更多</el-link></span></h3>
-            <div v-for="(item, index) in admissionsInformationArticle" :key="index">
-              <p>
-                <el-link
-                    :href="`/article/detail/${item.articleId}`"
-                    target="_blank"
-                >{{ item.articleTitle }}</el-link>
-                <span>{{item.articleReleased}}</span>
-              </p>
-            </div>
-          </template>
-          <div v-else-if="isLoading" class="loading-text">数据加载中...</div>
-          <div v-else class="error-text">数据加载失败，请稍后重试</div>
-        </div>
-        <div class="policy-block">
-          <template v-if="!isLoading && !error">
-            <h3>政策解读<span class="moreArticle"><el-link :href="`/articles/政策解读`">》更多</el-link></span></h3>
-            <div v-for="(item, index) in policyArticle" :key="index">
-              <p>
-                <el-link
-                    :href="`/article/detail/${item.articleId}`"
-                    target="_blank"
-                >{{ item.articleTitle }}</el-link>
-                <span>{{item.articleReleased}}</span>
-              </p>
-            </div>
-          </template>
-          <div v-else-if="isLoading" class="loading-text">数据加载中...</div>
-          <div v-else class="error-text">数据加载失败，请稍后重试</div>
-        </div>
-        <div class="guide-block">
-          <template v-if="!isLoading &&!error">
-            <h3>备考指南<span class="moreArticle"><el-link :href="`/articles/备考指南`">》更多</el-link></span></h3>
-            <div v-for="(item, index) in guideArticle" :key="index">
-              <p>
-                <el-link
-                    :href="`/article/detail/${item.articleId}`"
-                    target="_blank"
-                >{{ item.articleTitle }}</el-link>
-                <span>{{item.articleReleased}}</span>
-              </p>
-            </div>
-          </template>
-          <div v-else-if="isLoading" class="loading-text">数据加载中...</div>
-          <div v-else class="error-text">数据加载失败，请稍后重试</div>
-        </div>
-      </div>
+          </div>
+          <el-empty description="暂无最新文章" v-else-if="!error" />
+          <!-- 显示统一的错误提示 -->
+          <el-result v-if="error && latestArticle.length === 0" status="error" title="加载失败" :sub-title="error">
+          </el-result>
+        </template>
+      </el-card>
 
-        <!-- 添加艺考月历组件 -->
-        <el-row>
-        <el-col :span="24">
-          <ArtExamCalendar />
+      <!-- 分类文章 - 使用栅格布局 -->
+      <el-row :gutter="20" class="category-row">
+        <!-- 考试通知 -->
+        <el-col :xs="24" :sm="12" :md="12">
+          <el-card class="article-section-card notice-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>考试通知</span>
+                <el-link :href="`/articles/考试通知`" type="primary" class="more-link">更多 &gt;</el-link>
+              </div>
+            </template>
+            <el-skeleton :rows="5" animated :loading="isLoading" />
+            <template v-if="!isLoading">
+              <div v-if="noticeArticle.length > 0">
+                <div v-for="(item, index) in noticeArticle" :key="index" class="article-item">
+                  <el-link :href="`/article/detail/${item.articleId}`" target="_blank">{{ item.articleTitle }}</el-link>
+                  <span class="article-date">{{ item.articleReleased }}</span>
+                </div>
+              </div>
+              <el-empty description="暂无考试通知" v-else-if="!error" />
+              <el-result v-if="error && noticeArticle.length === 0" status="error" title="加载失败" :sub-title="error"></el-result>
+            </template>
+          </el-card>
+        </el-col>
+
+        <!-- 招生信息 -->
+        <el-col :xs="24" :sm="12" :md="12">
+          <el-card class="article-section-card admissions-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>招生信息</span>
+                <el-link :href="`/articles/招生信息`" type="primary" class="more-link">更多 &gt;</el-link>
+              </div>
+            </template>
+            <el-skeleton :rows="5" animated :loading="isLoading" />
+             <template v-if="!isLoading">
+               <div v-if="admissionsInformationArticle.length > 0">
+                 <div v-for="(item, index) in admissionsInformationArticle" :key="index" class="article-item">
+                   <el-link :href="`/article/detail/${item.articleId}`" target="_blank">{{ item.articleTitle }}</el-link>
+                   <span class="article-date">{{ item.articleReleased }}</span>
+                 </div>
+               </div>
+               <el-empty description="暂无招生信息" v-else-if="!error" />
+               <el-result v-if="error && admissionsInformationArticle.length === 0" status="error" title="加载失败" :sub-title="error"></el-result>
+             </template>
+          </el-card>
+        </el-col>
+
+        <!-- 政策解读 -->
+        <el-col :xs="24" :sm="12" :md="12">
+          <el-card class="article-section-card policy-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>政策解读</span>
+                <el-link :href="`/articles/政策解读`" type="primary" class="more-link">更多 &gt;</el-link>
+              </div>
+            </template>
+            <el-skeleton :rows="5" animated :loading="isLoading" />
+             <template v-if="!isLoading">
+               <div v-if="policyArticle.length > 0">
+                 <div v-for="(item, index) in policyArticle" :key="index" class="article-item">
+                   <el-link :href="`/article/detail/${item.articleId}`" target="_blank">{{ item.articleTitle }}</el-link>
+                   <span class="article-date">{{ item.articleReleased }}</span>
+                 </div>
+               </div>
+               <el-empty description="暂无政策解读" v-else-if="!error" />
+               <el-result v-if="error && policyArticle.length === 0" status="error" title="加载失败" :sub-title="error"></el-result>
+             </template>
+          </el-card>
+        </el-col>
+
+        <!-- 备考指南 -->
+        <el-col :xs="24" :sm="12" :md="12">
+          <el-card class="article-section-card guide-card" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>备考指南</span>
+                <el-link :href="`/articles/备考指南`" type="primary" class="more-link">更多 &gt;</el-link>
+              </div>
+            </template>
+            <el-skeleton :rows="5" animated :loading="isLoading" />
+             <template v-if="!isLoading">
+               <div v-if="guideArticle.length > 0">
+                 <div v-for="(item, index) in guideArticle" :key="index" class="article-item">
+                   <el-link :href="`/article/detail/${item.articleId}`" target="_blank">{{ item.articleTitle }}</el-link>
+                   <span class="article-date">{{ item.articleReleased }}</span>
+                 </div>
+               </div>
+               <el-empty description="暂无备考指南" v-else-if="!error" />
+               <el-result v-if="error && guideArticle.length === 0" status="error" title="加载失败" :sub-title="error"></el-result>
+             </template>
+          </el-card>
         </el-col>
       </el-row>
-      
+
+      <!-- 艺考月历 -->
+      <el-row>
+        <el-col :span="24">
+          <!-- 也可以给日历加个 Card 包裹 -->
+          <el-card shadow="hover">
+             <template #header>
+               <div class="card-header">
+                 <span>艺考月历</span>
+               </div>
+             </template>
+             <ArtExamCalendar />
+          </el-card>
+        </el-col>
+      </el-row>
+
     </el-main>
   </el-container>
-
 </template>
 
 <style scoped>
-[class$="-block"] {
+/* --- 基础布局和间距 --- */
+.el-main {
   padding: 20px;
-  margin: 15px 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  height: 500px;
-  width: 500px;
-  box-sizing: border-box;
-  position: relative; /* 新增定位属性 */
 }
 
-/* 方案2：单独设置每个区块 */
-.latestArticle-block {
-  border: 1px solid #e9ecef;
+.el-row {
+  margin-bottom: 20px;
+}
+.el-row:last-child {
+  margin-bottom: 0;
 }
 
-.notice-block {
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
+.search-row {
+  margin-bottom: 30px; /* 搜索行与其他内容间距更大 */
+}
+.search-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.search-input {
+  margin-right: 10px; /* 搜索框和按钮间距 */
 }
 
-.admissionsInformation-block {
-  background-color: #d4edda;
-  border: 1px solid #c3e6cb;
+/* --- 卡片通用样式 --- */
+.el-card {
+  border: none; /* 移除默认边框，靠阴影区分 */
+  border-radius: 8px; /* 圆角 */
 }
-
-.policy-block {
-  background-color: #d1ecf1;
-  border: 1px solid #bee5eb;
+.hot-article-card,
+.article-section-card {
+  height: 100%; /* 让卡片在栅格中高度一致 */
+  min-height: 350px; /* 保证一定最小高度 */
+  display: flex; /* 使用 flex 布局 */
+  flex-direction: column; /* 垂直排列 */
 }
-
-.guide-block {
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
+.el-card :deep(.el-card__header) { /* 深度选择器修改内部组件样式 */
+  background-color: #f8f9fa; /* 头部背景色 */
+  border-bottom: 1px solid #e9ecef;
+  padding: 10px 15px; /* 调整头部内边距 */
 }
-
-[class$="-block"] div p {
+.el-card :deep(.el-card__body) {
+  padding: 15px; /* 调整内容区内边距 */
+  flex-grow: 1; /* 让内容区填充剩余空间 */
+  display: flex; /* 再次使用 flex */
+  flex-direction: column; /* 垂直排列 */
+}
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 16px; /* 调整标题字号 */
+  font-weight: 600; /* 加粗 */
+  color: #343a40;
+}
+.more-link {
+  font-size: 14px;
+  font-weight: normal;
 }
 
-[class$="-block"] div p span{
+/* --- 文章列表项样式 --- */
+.article-item, .hot-article-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed #eee; /* 虚线分隔 */
+  font-size: 14px; /* 统一字号 */
+}
+.article-item:last-child, .hot-article-item:last-child {
+   border-bottom: none;
+}
+.article-item .el-link, .hot-article-item .el-link {
+  flex-grow: 1;
+  margin-right: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #303133; /* 默认链接颜色 */
+}
+.article-item .el-link:hover, .hot-article-item .el-link:hover {
+  color: #409EFF; /* 悬停颜色 */
+}
+.article-date {
   font-size: 12px;
-  color: #888;
+  color: #999;
+  flex-shrink: 0;
 }
-.latestArticle{
-  display: flex;
-  justify-content: center;
+.hot-article-item .hot-index {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 30%;
+  background-color: #f2f6fc;
+  color: #909399;
+  margin-right: 8px;
+  font-size: 12px;
 }
-.moreArticle{
-  position: relative;
-  left: 100px;
+.hot-article-item:nth-child(-n+3) .hot-index { /* 前三名不同样式 */
+  background-color: #fef0f0;
+  color: #f56c6c;
+}
 
-}
-.categoryArticle {
-  display: flex;
-  flex-wrap: wrap; /* 允许换行 */
-  gap: 20px; /* 添加间距 */
-}
+/* --- 分类卡片顶部颜色条 --- */
+.notice-card :deep(.el-card__header) { border-top: 3px solid #E6A23C; }
+.admissions-card :deep(.el-card__header) { border-top: 3px solid #67C23A; }
+.policy-card :deep(.el-card__header) { border-top: 3px solid #409EFF; }
+.guide-card :deep(.el-card__header) { border-top: 3px solid #F56C6C; }
 
-/* 子元素设置 */
-.categoryArticle > div {
-  flex: 1; /* 等分剩余空间 */
-  min-width: calc(50% - 10px); /* 最小宽度保持一行两个 */
-  box-sizing: border-box; /* 包含padding和border */
-}
-.menu {
-  list-style: none;
-  margin: 0;
-  display: flex;
-  justify-content: center; /* 改为左对齐 */
-  align-items: center; /* 垂直居中 */
+/* --- 轮播图样式 --- */
+.carousel-container {
   border-radius: 8px;
+  overflow: hidden;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  background-color: rgb(148.6, 212.3, 117.1);
-  padding: 10px 20px;
-  flex-grow: 1; /* 允许菜单项扩展 */
+}
+.carousel-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 覆盖方式填充 */
+  display: block; /* 消除图片底部空隙 */
 }
 
 
-.el-header {
-  display: flex; /* 关键属性 */
-  justify-content: space-between; /* 左右分布 */
-  align-items: center; /* 垂直居中 */
-  padding: 0 30px; /* 添加水平内边距 */
+/* --- 骨架屏和空状态/错误状态 --- */
+.el-skeleton {
+  width: 100%;
 }
-.menu li {
-  margin: 0 15px; /* 列表项之间的间距 */
+.el-empty {
+  flex-grow: 1; /* 让空状态占据剩余空间 */
+  padding: 20px 0; /* 增加上下内边距 */
 }
-.avatar svg{
-  height: 40px;
-  width: 40px;
+.el-result {
+  flex-grow: 1; /* 让错误状态占据剩余空间 */
+  padding: 20px 0;
 }
-.avatar-dropdown {
-  position: absolute;
-  top: 60px;
-  right: 20px;
+
+/* 新增：图表卡片样式 */
+.chart-card .el-card__body {
+  padding: 20px; /* 给图表一些内边距 */
 }
 </style>

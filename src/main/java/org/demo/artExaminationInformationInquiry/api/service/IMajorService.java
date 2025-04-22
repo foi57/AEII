@@ -2,6 +2,8 @@ package org.demo.artExaminationInformationInquiry.api.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
+import org.demo.artExaminationInformationInquiry.api.entity.MajorCount;
+
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -19,4 +21,5 @@ public interface IMajorService extends IService<Major> {
     boolean updateMajor(Major major);
     boolean deleteMajor(Long id);
     List<Major> selectMajorListByUniversityId(Long universityId);
+    List<MajorCount> selectMajorListCount();
 }

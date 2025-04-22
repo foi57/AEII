@@ -42,5 +42,11 @@ export default {
                 universityId: universityId,
             }
         })
+    },
+    selectMajorListCount(){
+        return request({
+            url: '/major/selectMajorListCount',
+            method: 'get',
+        })
     }
 }

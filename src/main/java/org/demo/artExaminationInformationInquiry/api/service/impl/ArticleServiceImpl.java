@@ -130,19 +130,19 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Override
     public Page<Article> selectArticleListByType(String title,String type, Integer pageNum, Integer pageSize) {
-        Page<Article> page=new Page<>(pageNum,pageSize);
-        page = lambdaQuery()
-                .like(Article::getArticleType, type)
-                .like(Article::getArticleTitle, title)
-                .orderByDesc(Article::getArticleReleased) // 新增排序条件
-                .page(page);
-        page.getRecords().forEach(article -> {
-            Users user = usersMapper.selectById(article.getArticleSource());
-            if (user != null) {
-                article.setUserName(user.getUsersName());  // 需要在Article实体类添加userName字段
-            }
-
-        });
+            Page<Article> page=new Page<>(pageNum,pageSize);
+            page = lambdaQuery()
+                    .like(Article::getArticleType, type)
+                    .like(Article::getArticleTitle, title)
+                    .orderByDesc(Article::getArticleReleased) // 新增排序条件
+                    .page(page);
+            page.getRecords().forEach(article -> {
+                Users user = usersMapper.selectById(article.getArticleSource());
+                if (user != null) {
+                    article.setUserName(user.getUsersName());  // 需要在Article实体类添加userName字段
+                }
+    
+            });
         return page;
     }
 

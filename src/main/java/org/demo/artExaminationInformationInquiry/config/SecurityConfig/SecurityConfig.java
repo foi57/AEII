@@ -28,11 +28,55 @@ public class SecurityConfig{
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
+                    // 仅限高级管理员的接口
                     .requestMatchers("/api/users/delete").hasAnyRole("seniorAdmin")
-                    .requestMatchers("/api/university/uploadImg","/api/article/upload/image").hasAnyRole("seniorAdmin","admin")
-                    .requestMatchers("/api/users/login","/api/users/register","/auth/refresh","/images/university/**","/article/images/**","/article/files/**","/api/article/select","/users/avatar/**","/comments/images/**","/api/article/detail/**",
-                    "/api/comments/selectListByArticleId","/api/users/selectById","/api/users/sendVerificationCode","/api/users/resetPassword").permitAll()
+                    
+                    // 高级管理员和普通管理员都可以访问的接口
+                    .requestMatchers(
+                            "/api/university/uploadImg",
+                            "/api/article/upload/image",
+                            "/api/university/updateUniversity",
+                            "/api/university/insertUniversity",
+                            "/api/major/updateMajor",
+                            "/api/major/deleteMajor",
+                            "/api/major/insertMajor",
+                            "/api/universityMajor/deleteUniversityMajor",
+                            "/api/universityMajor/insertUniversityMajor",
+                            "/api/article/update",
+                            "/api/article/delete/**"
+                    ).hasAnyRole("seniorAdmin","admin")
+                    
+                    // 公开接口，无需认证
+                    .requestMatchers(
+                            "/api/users/login",
+                            "/api/users/register",
+                            "/auth/refresh",
+                            "/images/university/**",
+                            "/article/images/**",
+                            "/article/files/**",
+                            "/api/article/select",
+                            "/users/avatar/**",
+                            "/comments/images/**",
+                            "/api/article/detail/**",
+                            "/api/comments/selectListByArticleId",
+                            "/api/users/selectById",
+                            "/api/users/sendVerificationCode",
+                            "/api/users/resetPassword",
+                            "/api/university/selectUniversityList",
+                            "/api/major/selectMajorListByName",
+                            "/api/major/selectMajorListByUniversityId",
+                            "/api/article/selectArticlesByCategoryUniversi",
+                            "/api/notification/select",
+                            "/carousel/images/**",
+                            "/api/carousel/get",
+                            "/api/hotArticle/list",
+                            "/api/major/selectMajorListCount",
+                            "/images/university/",
+                            "/api/university/selectById",
+                            "/api/universityCollection/selectByUserIdUniversityId"
+                    ).permitAll()
 
+                    // 其他所有请求需要认证
                     .anyRequest().authenticated()
            )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

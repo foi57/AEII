@@ -60,14 +60,11 @@ const categories = [
 ]
 const articleType = ref('')
 const handleChange = async () => {
-  const loadingInstance = ElLoading.service({
-    target: '.university-detail-container',
-    text: '正在加载文章...'
-  })
+
   await article.selectArticlesByCategoryUniversityName(articleType.value,university.value.universityName,1,20).then(res => {
     articleList.value = res.data.records
   })
-  loadingInstance.close()
+  
 }
 
 const isLoading = ref(false)
@@ -130,7 +127,15 @@ selectCollection()
             <p><el-icon><Location /></el-icon> 地区：{{ university.universityArea }}</p>
             <p><el-icon><Trophy /></el-icon> 等级：{{ university.universityLevel }}</p>
             <p><el-icon><OfficeBuilding /></el-icon> 类型：{{ university.universityType }}</p>
-
+            <el-tag
+              v-for="(feature, index) in university.featureList"
+              :key="index"
+              type="info"
+              class="feature-tag"
+            >
+              {{ feature }}
+            </el-tag>
+            <hr/>
             <el-button
               @click="collect"
               :type="hadCollect ? 'warning' : 'primary'"
@@ -176,21 +181,10 @@ selectCollection()
             </el-tag>
           </div>
 
-          <h2>院校特色</h2>
-          <div class="features">
-            <el-tag
-              v-for="(feature, index) in university.featureList"
-              :key="index"
-              type="info"
-              class="feature-tag"
-            >
-              {{ feature }}
-            </el-tag>
-          </div>
-
+       
           <h2>院校介绍</h2>
           <div class="introduction">
-            <el-scrollbar height="400px">
+            <el-scrollbar height="600px">
               <pre>{{ university.universityIntroduction }}</pre>
             </el-scrollbar>
           </div>

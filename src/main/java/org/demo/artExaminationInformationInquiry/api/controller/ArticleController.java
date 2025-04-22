@@ -117,14 +117,29 @@ public class ArticleController {
     public ResponseEntity<Page<Article>> selectArticle(@RequestBody Map<String,Object> article){
         String articleTitle=(String) article.get("articleTitle");
         long universityId= -1L;
+        String articleType="";
+        int pageNum=1;
+        int pageSize=99999999;
+        Date startData =null;
+        Date endData =null;
         if (article.get("articleSource") !=null) {
             universityId = ((Number) article.get("articleSource")).longValue();
         }
-        String articleType=(String) article.get("articleType");
-        int pageNum=(Integer) article.get("pageNum");
-        int pageSize=(Integer) article.get("pageSize");
-        Data startData =(Data) article.get("startDate");
-        Data endData =(Data) article.get("endDate");
+        if (article.get("articleType")!=null) {
+            articleType = (String) article.get("articleType");
+        }
+        if (article.get("pageNum")!=null) {
+            pageNum = ((Number) article.get("pageNum")).intValue();    
+        }
+        if (article.get("pageSize")!=null) {
+            pageSize = ((Number) article.get("pageSize")).intValue(); 
+        }
+        if (article.get("startDate")!=null) {
+            startData = (Date) article.get("startDate"); 
+        }
+        if (article.get("endDate")!=null) {
+            endData = (Date) article.get("endDate"); 
+        }
         logger.debug("articleTitle: {} universityId: {} articleType: {} pageNum: {} pageSize: {} startData: {} endData: {}", articleTitle, universityId, articleType, pageNum, pageSize, startData, endData);
         if (articleType.equals("myPublish")){
             return ResponseEntity.ok(articleService.selectArticleListByUserId(articleTitle,universityId,pageNum,pageSize));

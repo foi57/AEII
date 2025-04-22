@@ -3,11 +3,15 @@ package org.demo.artExaminationInformationInquiry.api.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
+import org.demo.artExaminationInformationInquiry.api.entity.MajorCount;
 import org.demo.artExaminationInformationInquiry.api.mapper.MajorMapper;
 import org.demo.artExaminationInformationInquiry.api.service.IMajorService;
+import org.demo.artExaminationInformationInquiry.api.service.IUniversityMajorService;
+
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,6 +24,11 @@ import java.util.List;
  */
 @Service
 public class MajorServiceImpl extends ServiceImpl<MajorMapper, Major> implements IMajorService {
+    IUniversityMajorService universityMajorService;
+
+    MajorServiceImpl(IUniversityMajorService universityMajorService){
+        this.universityMajorService = universityMajorService;
+    }
 
     @Override
     public Page<Major> selectMajorListByName(String name, int pageNum, int pageSize) {
@@ -43,4 +52,18 @@ public class MajorServiceImpl extends ServiceImpl<MajorMapper, Major> implements
                 .exists("SELECT 1 FROM university_major mu WHERE mu.major_id = major.major_id AND mu.university_id = {0}", universityId)
                 .list();
     }
+
+    @Override
+    public List<MajorCount> selectMajorListCount() {
+       List<Major> MajorList = list();
+       List<MajorCount> MajorCountList = new ArrayList<>();
+        MajorList.forEach(major -> {
+            MajorCount majorCount = new MajorCount();
+            majorCount.setMajorName(major.getMajorName());
+            majorCount.setCount(universityMajorService.getUniversityIdListByMajorId(major.getMajorId()).length);
+            MajorCountList.add(majorCount);
+        });
+        return MajorCountList;
+    }
+
 }

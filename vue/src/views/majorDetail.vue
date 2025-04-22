@@ -35,6 +35,14 @@ loadDate()
         {{ majorList.majorIntroduction }}
       </el-scrollbar>
     </div>
+    <h2>开设课程</h2>
+    <div class="courses">
+      {{ majorList.majorCourse }}
+    </div>
+    <h2>就业方向</h2>
+    <div class="employment">
+      {{ majorList.majorEmployment }}
+    </div>
   </el-card>
     </el-col>
     <el-col :span="19">

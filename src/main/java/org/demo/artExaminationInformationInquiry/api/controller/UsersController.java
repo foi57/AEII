@@ -84,7 +84,8 @@ public class UsersController {
       return ResponseEntity.ok(usersList);
    }
    @PostMapping("/insert")
-   public ResponseEntity<String> insertUser(@RequestParam("name") String name,@RequestParam("password") String password,@RequestParam("email") String email,@RequestParam("phone")String phone,@RequestParam("role") String role){
+   public ResponseEntity<String> insertUser(@RequestParam("name") String name,@RequestParam("password") String password,
+   @RequestParam("email") String email,@RequestParam("phone")String phone,@RequestParam("role") String role){
        Users users = usersUtil.BuildUsers(name,password,email,phone,role);
        logger.debug(users.toString());
 

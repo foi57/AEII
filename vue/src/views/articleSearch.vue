@@ -110,14 +110,27 @@ const formatArticleType = (type) => {
 
 // 初始加载时执行搜索
 onMounted(() => {
-  // 从 URL 查询参数中获取关键词
+  // 从 URL 查询参数中获取关键词和高级搜索状态
   const route = useRoute();
+
+  // 检查 advanced 参数
+  if (route.query.advanced === 'true') {
+    showAdvancedSearch.value = true;
+    // 如果希望打开高级搜索时不清空普通搜索框，可以在这里处理
+    // 如果希望打开高级搜索时自动执行一次空的高级搜索（如果 AdvancedSearch 组件支持），可以在这里触发
+  }
+
+  // 检查 keyword 参数并执行普通搜索
   if (route.query.keyword) {
     articleForm.articleTitle = route.query.keyword;
-    performSearch();
-  } else if (articleForm.articleTitle) {
-    performSearch();
+    performSearch(); // 执行普通搜索
   }
+  // 如果 URL 没有 keyword 参数，但 articleForm 中已有标题（可能来自之前的状态），也执行搜索
+  // else if (articleForm.articleTitle) {
+  //   performSearch();
+  // }
+  // 注意：如果同时有 keyword 和 advanced=true，目前会先设置显示高级搜索，然后执行普通搜索。
+
 });
 </script>
 
@@ -138,17 +151,22 @@ onMounted(() => {
         <template #prefix>
           <el-icon><Search /></el-icon>
         </template>
+        <template #suffix>
+        <el-button @click="performSearch" :loading="isLoading">搜索</el-button>
+      </template>
       </el-autocomplete>
-      <el-button type="primary" @click="performSearch" :loading="isLoading">搜索</el-button>
+      
       <el-button @click="toggleAdvancedSearch">{{ showAdvancedSearch ? '隐藏高级搜索' : '高级搜索' }}</el-button>
     </div>
     
     <!-- 高级搜索组件 -->
+    <!-- v-if="showAdvancedSearch" 会根据 showAdvancedSearch 的值决定是否渲染 -->
     <div v-if="showAdvancedSearch" class="advanced-search-container">
       <AdvancedSearch @search-results="handleAdvancedSearchResults" />
     </div>
-    
+
     <!-- 搜索结果展示 -->
+    <!-- 添加了 !showAdvancedSearch 条件，避免在高级搜索展开时显示普通搜索结果 -->
     <div class="search-results" v-if="searchResults.length > 0 && !showAdvancedSearch">
       <h3>搜索结果 (共 {{ total }} 条)</h3>
       
@@ -202,11 +220,6 @@ onMounted(() => {
 .search-box {
   display: flex;
   margin-bottom: 15px;
-}
-
-.search-input {
-  flex: 1;
-  margin-right: 10px;
 }
 
 .advanced-search-container {
@@ -269,5 +282,8 @@ onMounted(() => {
 
 .loading-container {
   margin-top: 20px;
+}
+.search-input :deep(.el-input__suffix-inner){
+  color: #000;
 }
 </style>
