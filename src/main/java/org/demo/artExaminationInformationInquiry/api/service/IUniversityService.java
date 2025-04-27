@@ -1,11 +1,8 @@
 package org.demo.artExaminationInformationInquiry.api.service;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.University;
 import com.baomidou.mybatisplus.extension.service.IService;
-
-import java.util.List;
 
 /**
  * <p>
@@ -20,4 +17,5 @@ public interface IUniversityService extends IService<University> {
     Page<University> selectUniversityList(String name, String area,String type,String level,String features,int pageNum, int pageSize);
     Page<University> selectAffiliatedUniversityList(Long majorId,String name, String area,String type,String level,String features,int pageNum, int pageSize);
     University selectUniversityByName(String name);
+    Boolean insertUniversity(University university);
 }

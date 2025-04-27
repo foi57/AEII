@@ -57,5 +57,11 @@ export default {
             }
         })
     },
-
+    insert(data){
+        return request({
+            url: '/university/insert',
+            method: 'post',
+            data: data
+        })
+    }
 }

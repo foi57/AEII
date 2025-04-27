@@ -235,7 +235,16 @@ const token1=localStorage.getItem(token.token);
           :value="item.value">
       </el-option>
     </el-select>
-   
+    <el-button v-if="userRole === 'seniorAdmin' " style="left: 350px; position: relative;;" @click="() =>{ insertOrEdit='insert';
+       userForm = {
+      userName: '',
+      password: '', // 密码通常不显示原值
+      email: '',
+      phone: '',
+      role: ''
+    };
+    handleDialog=true;
+        }">添加用户</el-button>
   </div>
   <div>
     <el-table :data="users">
@@ -258,9 +267,11 @@ const token1=localStorage.getItem(token.token);
       <el-table-column prop="userCreationTime" label="创建时间"></el-table-column>
       <el-table-column prop="usersRole" label="用户类型"></el-table-column>
       <el-table-column label="操作">
-        <template #default="scope" v-if="userRole==='seniorAdmin'">
-          <el-button type="primary" @click="editUserWithAvatar(scope.row)">编辑</el-button>
-          <el-button type="danger" @click="editUser(scope.row.usersId)">删除</el-button>
+        <template #default="scope">
+          <template v-if="userRole === 'seniorAdmin' || (userRole === 'admin' && scope.row.usersRole === 'user')">
+            <el-button type="primary" @click="editUserWithAvatar(scope.row)">编辑</el-button>
+            <el-button type="danger" @click="editUser(scope.row.usersId)">删除院校</el-button>
+          </template>
         </template>
       </el-table-column>
     </el-table>
@@ -367,16 +378,7 @@ const token1=localStorage.getItem(token.token);
       <el-button type="primary"  @click="handleDeleteUser">确 定</el-button>
     </span>
   </el-dialog>
-  <el-button @click="() =>{ insertOrEdit='insert';
-       userForm = {
-      userName: '',
-      password: '', // 密码通常不显示原值
-      email: '',
-      phone: '',
-      role: ''
-    };
-    handleDialog=true;
-        }">添加用户</el-button>
+  
 </template>
 
 <style scoped>

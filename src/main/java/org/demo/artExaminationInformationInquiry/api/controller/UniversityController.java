@@ -16,6 +16,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+
+
 
 /**
  * <p>
@@ -57,7 +63,7 @@ public class UniversityController {
         Files.copy(file.getInputStream(), uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
 
         // 删除旧文件
-        if (universitySchoolBadge != null) {
+        if (universitySchoolBadge != null && !universitySchoolBadge.trim().isEmpty()) {
             Path oldFilePath = uploadPath.resolve(System.getProperty("user.dir") +"\\file\\university\\"+universitySchoolBadge);
             if (Files.exists(oldFilePath)) {
                 Files.delete(oldFilePath);
@@ -66,7 +72,7 @@ public class UniversityController {
 
 
         // 更新数据库记录
-        if(universityId != null) {
+        if(universityId != -1) {
             universityService.lambdaUpdate()
                 .eq(University::getUniversityId, universityId)
                 .set(University::getUniversitySchoolbadge, fileName)
@@ -78,6 +84,7 @@ public class UniversityController {
         response.put("data", fileName);
         return ResponseEntity.ok(response);
     } catch (IOException e) {
+        log.error("文件上传失败", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "文件上传失败"));
     }
 }
@@ -103,4 +110,9 @@ public class UniversityController {
     public University selectUniversityById(@RequestParam("id") Long id){
         return universityService.getById(id);
     }
+    @PostMapping("/insert")
+    public String postMethodName(@RequestBody University university) {
+        return universityService.insertUniversity(university)?"success":"fail";
+    }
+    
 }

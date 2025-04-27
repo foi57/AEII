@@ -37,7 +37,8 @@ public class UniversityServiceImpl extends ServiceImpl<UniversityMapper, Univers
     @Override
     public Page<University> selectUniversityList(String name, String area, String level,String type, String features, int pageNum, int pageSize) {
         Page<University> page = new Page<>(pageNum, pageSize);
-        return lambdaQuery().like(University::getUniversityName, name).like(University::getUniversityArea, area).like(University::getUniversityType, type).like(University::getUniversityLevel, level).like(University::getUniversityFeatures, features).page(page);
+        return lambdaQuery().like(University::getUniversityName, name).like(University::getUniversityArea, area).like(University::getUniversityType, type)
+        .like(University::getUniversityLevel, level).like(University::getUniversityFeatures, features).page(page);
     }
 
     @Transactional
@@ -50,5 +51,10 @@ public class UniversityServiceImpl extends ServiceImpl<UniversityMapper, Univers
     @Override
     public University selectUniversityByName(String name){
         return lambdaQuery().eq(University::getUniversityName,name).one();
+    }
+
+    @Override
+    public Boolean insertUniversity(University university) {
+        return save(university);
     }
 }

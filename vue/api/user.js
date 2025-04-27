@@ -135,5 +135,12 @@ export default {
             method: 'post',
             data
         })
+    },
+    updateEmail(params) {
+        return request({
+            url: '/users/updateEmail',
+            method: 'post',
+            params
+        })
     }
 }

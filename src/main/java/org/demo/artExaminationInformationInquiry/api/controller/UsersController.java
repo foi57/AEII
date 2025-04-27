@@ -94,6 +94,10 @@ public class UsersController {
              logger.debug("用户名已存在");
              return ResponseEntity.status(400).body("用户名已存在");
           }
+          if (usersService.selectUsersByEmail(users.getUsersEmail())!= null) {
+             logger.debug("邮箱已存在");
+             return ResponseEntity.status(400).body("邮箱已存在"); 
+          }
           usersService.insertUser(users);
           return ResponseEntity.ok("success");
        }catch (Exception e){
@@ -195,7 +199,7 @@ public class UsersController {
          String verificationCode = generateVerificationCode();
          
          // 发送邮件
-         sendEmail(email, "密码重置验证码", "您的验证码是: " + verificationCode + "，有效期10分钟，请勿泄露给他人。");
+         sendEmail(email, "艺考信息网验证码", "您的验证码是: " + verificationCode + "，有效期10分钟，请勿泄露给他人。");
          
          // 存储验证码，设置10分钟后过期
          Map<String, Object> codeInfo = new HashMap<>();
@@ -265,7 +269,7 @@ public class UsersController {
          return ResponseEntity.status(500).body("重置密码失败");
       }
    }
-   
+
    /**
     * 生成6位随机验证码
     * @return 验证码
@@ -294,4 +298,33 @@ public class UsersController {
       mailSender.send(message);
    }
 
+
+
+
+@PostMapping("/updateEmail")
+public ResponseEntity<String> updateEmail(
+    @RequestParam("userId") Long userId,
+    @RequestParam("newEmail") String newEmail,
+    @RequestParam("code") String code) {
+    
+    // 验证验证码逻辑（复用原有验证码验证逻辑）
+    Map<String, Object> codeInfo = verificationCodes.get(newEmail);
+    if (codeInfo == null || !code.equals(codeInfo.get("code"))) {
+        return ResponseEntity.status(400).body("验证码错误");
+    }
+    
+    try {
+        Users user = usersService.getById(userId);
+        if (usersService.selectUsersByEmail(newEmail) != null) {
+            return ResponseEntity.status(400).body("该邮箱已被注册");
+        }
+        user.setUsersEmail(newEmail);
+        usersService.updateById(user);
+        verificationCodes.remove(newEmail);
+        return ResponseEntity.ok("邮箱更新成功");
+    } catch (Exception e) {
+        logger.error("邮箱更新失败: {}", e.getMessage());
+        return ResponseEntity.status(500).body("邮箱更新失败");
+    }
+}
 }

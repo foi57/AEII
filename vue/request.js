@@ -2,8 +2,9 @@ import axios from 'axios'
 import router from "/src/router/index.js";
 import serverUrl from "./serverUrl.js";
 const request = axios.create({
-    baseURL: serverUrl.url+'/api',
-    timeout: 15000, // 从5000ms增加到15000ms (15秒)
+    baseURL: serverUrl.url+'/api', // 旧配置
+    // baseURL: '/api', // 使用相对路径，Nginx 会处理
+    timeout: 15000,
 })
 request.interceptors.request.use(config => {
     const token = localStorage.getItem('accessToken')

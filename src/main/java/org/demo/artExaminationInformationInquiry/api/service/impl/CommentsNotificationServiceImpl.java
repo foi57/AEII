@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.demo.artExaminationInformationInquiry.Enum.CommentsNotificationEnum;
 import org.demo.artExaminationInformationInquiry.api.entity.Comments;
 import org.demo.artExaminationInformationInquiry.api.entity.CommentsNotification;
 import org.demo.artExaminationInformationInquiry.api.entity.CommentsNotificationRead;

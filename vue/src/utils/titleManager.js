@@ -1,6 +1,7 @@
 // 网站标题管理工具
 const siteName = '艺考信息网'
 
+
 /**
  * 设置页面标题
  * @param {string} pageTitle 页面标题

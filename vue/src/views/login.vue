@@ -26,12 +26,14 @@ const rules = {
 const handleLogin = async () => {
   try {
     const res = await userApi.login(form.value.username, form.value.password)
-
+    console.log(res.data)
     ElMessage.success('登录成功')
     localStorage.setItem('accessToken', res.data.accessToken)
     localStorage.setItem('refreshToken', res.data.refreshToken)
     userStore.setUserInfo(res.data.user)
-
+    if (res.data.user.usersRole === 'admin' || res.data.user.usersRole === 'seniorAdmin') {
+      await router.push('/adminIndex') 
+    }else
     await router.push('/userIndex')
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '用户名或密码错误')

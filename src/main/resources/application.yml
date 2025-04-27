@@ -9,9 +9,12 @@ spring:
 
     name: AEII
   datasource:
-    url:  jdbc:mysql://localhost:3308/AEII?characterEncoding=utf8&useSSL=false
+    # 在 Docker Compose 网络中，使用服务名 'mysql' 连接
+    # url: jdbc:mysql://mysql:3306/AEII?characterEncoding=utf8&useSSL=false
+    # 本地开发时可能需要覆盖为 localhost:3308
+    url: jdbc:mysql://localhost:3308/AEII?characterEncoding=utf8&useSSL=false
     username: root
-    password: password
+    password: password # 确保与 docker-compose.yml 中 MYSQL_ROOT_PASSWORD 一致
     driver-class-name: com.mysql.cj.jdbc.Driver
   mail:
     host: smtp.qq.com

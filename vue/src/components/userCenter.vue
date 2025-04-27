@@ -1,5 +1,5 @@
 <script setup>
-import {ref,computed} from "vue";
+import {ref,computed,reactive} from "vue";
 import userApi from "../../api/user.js";
 import {Store} from "../store/index.js";
 import {ElMessage} from "element-plus";
@@ -154,6 +154,60 @@ const onCropperReady = () => {
   console.log('裁剪器初始化完成')
   cropper.value?.setAspectRatio(1) // 强制设置1:1比例
 }
+// 在script setup部分添加以下代码
+const emailForm = reactive({
+  newEmail: '',
+  verificationCode: ''
+})
+
+const showEmailDialog = ref(false)
+const isEmailSending = ref(false)
+const emailCountdown = ref(0)
+let emailTimer = null
+
+// 发送邮箱验证码
+const sendEmailCode = async () => {
+  try {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailForm.newEmail)) {
+      ElMessage.error('请输入有效的新邮箱地址')
+      return
+    }
+    
+    isEmailSending.value = true
+    await userApi.sendVerificationCode(emailForm.newEmail)
+    
+    ElMessage.success('验证码已发送')
+    // 倒计时逻辑（复用原有倒计时组件逻辑）
+    emailCountdown.value = 60
+    emailTimer = setInterval(() => {
+      emailCountdown.value--
+      if (emailCountdown.value <= 0) {
+        clearInterval(emailTimer)
+        isEmailSending.value = false
+      }
+    }, 1000)
+  } catch (error) {
+    ElMessage.error(error.response?.data || '发送失败')
+    isEmailSending.value = false
+  }
+}
+
+// 提交邮箱修改
+const submitEmailChange = async () => {
+  try {
+    await userApi.updateEmail({
+      userId: userForm.value.id,
+      newEmail: emailForm.newEmail,
+      code: emailForm.verificationCode
+    })
+    ElMessage.success('邮箱修改成功')
+    showEmailDialog.value = false
+    // 刷新用户信息
+    user.value = await userApi.selectUserByName(userName)
+  } catch (error) {
+    ElMessage.error(error.response?.data || '修改失败')
+  }
+}
 </script>
 
 <template>
@@ -180,7 +234,8 @@ const onCropperReady = () => {
 <div v-else>
   <el-skeleton :rows="5"></el-skeleton>
 </div>
-  <div v-if="user"><el-button @click="() =>{
+  <div v-if="user">
+    <el-button @click="() =>{
     handleEditDialog=true;
     userForm.id=user[0].usersId;
     userForm.userName=user[0].usersName;
@@ -188,10 +243,15 @@ const onCropperReady = () => {
     userForm.phone=user[0].usersPhone;
     userForm.role=user[0].usersRole;
     console.log(userForm)
-  }">编辑</el-button><el-button @click="()=>{
+    }">编辑
+    </el-button>
+    <el-button @click="()=>{
     handlePasswordDialog=true;
     handlePasswordDialogOpen();
-  }">修改密码</el-button></div>
+  }">修改密码
+    </el-button>
+    
+  </div>
   <el-dialog title="编辑用户" v-model="handleEditDialog">
     <el-form  :model="userForm" :rules="rules" ref="formRef">
       <el-form-item>
@@ -243,8 +303,42 @@ const onCropperReady = () => {
       <el-form-item label="用户名" prop="userName">
         <el-input placeholder="请输入用户名" v-model="userForm.userName"></el-input>
       </el-form-item>
+      <el-dialog title="修改邮箱" v-model="showEmailDialog">
+        <el-form :model="emailForm" label-width="100px">
+          <el-form-item label="新邮箱" prop="newEmail">
+            <el-input v-model="emailForm.newEmail" placeholder="请输入新邮箱"/>
+          </el-form-item>
+          <el-form-item label="验证码" prop="verificationCode">
+            <div class="verification-code-container">
+              <el-input v-model="emailForm.verificationCode" placeholder="请输入验证码"/>
+              <el-button 
+                :disabled="isEmailSending"
+                @click="sendEmailCode"
+                class="send-code-btn">
+                {{ isEmailSending ? `重新发送(${emailCountdown}s)` : '获取验证码' }}
+              </el-button>
+            </div>
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="showEmailDialog = false">取消</el-button>
+          <el-button type="primary" @click="submitEmailChange">确认修改</el-button>
+        </template>
+      </el-dialog>
+      
+      <!-- 修改原邮箱表单项 -->
       <el-form-item label="邮箱" prop="email">
-        <el-input placeholder="请输入邮箱" v-model="userForm.email"></el-input>
+        <el-input 
+          v-model="userForm.email" 
+          placeholder="请输入邮箱"
+          disabled
+        />
+        <el-button 
+          type="primary" 
+          @click="showEmailDialog = true"
+          style="margin-left: 10px">
+          修改邮箱
+        </el-button>
       </el-form-item>
       <el-form-item label="手机号" prop="phone">
         <el-input placeholder="请输入手机号" v-model="userForm.phone"></el-input>

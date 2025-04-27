@@ -1,0 +1,35 @@
+# 使用包含 JDK 的基础镜像
+FROM openjdk:23-jdk-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 将 Maven Wrapper 相关文件复制到容器中，以便下载依赖和构建
+COPY mvnw .
+COPY .mvn .mvn
+
+# 复制 pom.xml 文件以下载依赖项（利用 Docker 缓存）
+COPY pom.xml .
+
+# 下载依赖项 - 如果 pom.xml 没有改变，这一层会被缓存
+# 注意：这里假设你的 mvnw 在 Linux 环境下可执行。如果 mvnw 是 Windows 脚本，你可能需要调整或使用 Maven 镜像。
+# RUN ./mvnw dependency:go-offline -B
+# 更好的方式是直接复制构建好的 JAR 包
+
+# 将项目源代码复制到容器中
+COPY src ./src
+
+# 使用 Maven Wrapper 打包应用（或者你可以先在本地构建好 JAR 包再复制进来）
+RUN ./mvnw package -DskipTests
+
+# 从 target 目录找到构建好的 JAR 文件（你需要根据实际的 JAR 文件名调整）
+ARG JAR_FILE=target/ArtExaminationInformationInquiry-0.0.1-SNAPSHOT.jar
+
+# 复制构建好的 JAR 文件到工作目录
+COPY ${JAR_FILE} app.jar
+
+# 暴露后端服务端口
+EXPOSE 9091
+
+# 容器启动时执行的命令
+ENTRYPOINT ["java", "-jar", "app.jar"]

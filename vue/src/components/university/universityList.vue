@@ -7,6 +7,7 @@ import {ElMessage, ElSelectV2} from "element-plus";
 import {useRoute} from "vue-router";
 import major_university from "../../../api/major_university.js";
 
+
 const props = defineProps({
   majorId: {
     type: Number,
@@ -76,6 +77,7 @@ select();
 
 let editDialog = ref(false);
 const clickUniversity = (university) => {
+  isInsert.value=false
   if(userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin' && route.path==='/adminIndex'){
     editDialog.value=true;
     universityForm.value.universityId=university.universityId;
@@ -103,7 +105,9 @@ const handleUploadSuccess = (response) => {
 }
 const token = localStorage.getItem('accessToken');
 const url = serverUrl.url;
+const isInsert = ref(false);
 const updateUniversity = () => {
+
   const formData = {
     ...universityForm.value,
     universityFeatures: universityForm.value.universityFeatures.join(','),
@@ -112,11 +116,27 @@ const updateUniversity = () => {
     universityEmail: universityForm.value.universityEmail || null,
     universityWebsite: universityForm.value.universityWebsite || null
   };
+
+if (isInsert.value) {
+  universityApi.insert(formData).then(res => {
+    ElMessage.success('添加成功')
+    editDialog.value = false;
+    select();
+  }).catch(error => {
+    console.error(error);
+    ElMessage.error('添加失败')
+  })
+}else
+  {
   universityApi.updateUniversity(formData).then(res => {
     ElMessage.success('编辑成功')
     editDialog.value = false;
     select();
+  }).catch(error => {
+    console.error(error);
+    ElMessage.error('编辑失败')
   })
+}
 }
 const featuresOptions = ref([
   {
@@ -481,7 +501,22 @@ const rules = {
         style="width: 300px; margin: 20px"
     ></el-autocomplete>
     <el-button type="primary" @click="handleSearch">搜索</el-button>
-    <el-button type="primary" v-if="majorId" @click="addEstablishmentUniversityDialog=true">添加开设院校</el-button>
+    <el-button type="primary" v-if="majorId!=null && route.path==='/adminIndex'" @click="addEstablishmentUniversityDialog=true">添加开设院校</el-button>
+    <el-button type="primary" v-if="route.path==='/adminIndex' && majorId===null" @click="()=>{
+      editDialog=true;
+      isInsert=true;
+      universityForm.universityId=null;
+      universityForm.universitySchoolBadge=null;
+      universityForm.universityName=null;
+      universityForm.universityArea=null;
+      universityForm.universityLevel=null;
+      universityForm.universityType=null;
+      universityForm.universityFeatures=[];
+      universityForm.universityIntroduction=null; 
+      universityForm.universityPhone=null;
+      universityForm.universityEmail=null;
+      universityForm.universityWebsite=null;
+    }">新增院校</el-button>
 
 <div>
   <el-select-v2
@@ -563,7 +598,7 @@ const rules = {
         :action="url + '/api/university/uploadImg'"
         :headers="{ 'Authorization': 'Bearer '+token,
         }"
-        :data="{ universityId: universityForm.universityId,
+        :data="{ universityId: universityForm.universityId ? universityForm.universityId : -1,
                  universitySchoolBadge: universityForm.universitySchoolBadge}"
         :on-success="handleUploadSuccess"
         :show-file-list="false"
@@ -620,7 +655,7 @@ const rules = {
         <el-button type="primary" @click="updateUniversity">保存</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="danger" @click="handleDeleteDialog=true" style="margin-left: 100px">删除</el-button>
+        <el-button v-if="isInsert===false" type="danger" @click="handleDeleteDialog=true" style="margin-left: 100px">删除</el-button>
       </el-form-item>
     </div>
   </el-form>

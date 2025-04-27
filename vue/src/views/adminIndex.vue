@@ -15,7 +15,7 @@ const userName = userStore.usersName;
 console.log(userName)
 const activeIndex = ref('0') // 初始可以设为 '0' 或其他默认项
 const outLogin = () => {
-  router.push('/adminLogin')
+  router.push('/login')
   localStorage.removeItem('token')
   userStore.$reset()
   localStorage.removeItem('userStore')

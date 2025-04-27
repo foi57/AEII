@@ -3,6 +3,7 @@ import majorApi from "../../api/major.js";
 import {h, ref, resolveComponent} from "vue";
 import {ElAutoResizer, ElMessage, ElTableV2} from "element-plus";
 import {Search} from "@element-plus/icons-vue";
+import major from "../../api/major.js";
 
 const majorList = ref([])
 const count = ref(0)
@@ -69,6 +70,8 @@ const columns = ref([
                 majorForm.value.majorCategory = rowData.majorCategory;
                 majorForm.value.duration = rowData.duration;
                 majorForm.value.majorIntroduction = rowData.majorIntroduction;
+                majorForm.value.majorCourse = rowData.majorCourse;
+                majorForm.value.majorEmployment = rowData.majorEmployment;
                 toDo.value = 'edit';
               }
             },
@@ -95,6 +98,8 @@ const majorForm = ref({
   majorCategory: '',
   duration: '',
   majorIntroduction: '',
+  majorCourse: '',
+  majorEmployment: '',
 })
 const toDo = ref('');
 const updateMajor = () => {
@@ -215,6 +220,12 @@ const EstablishmentColleges =() =>{
       </el-form-item>
       <el-form-item label="专业介绍" prop="majorIntroduction">
         <el-input placeholder="请输入专业介绍" v-model="majorForm.majorIntroduction" type="textarea"></el-input>
+      </el-form-item>
+      <el-form-item label="开设课程">
+        <el-input placeholder="请输入开设课程" v-model="majorForm.majorCourse"></el-input>
+      </el-form-item>
+      <el-form-item label="就业方向">
+        <el-input placeholder="请输入就业方向" v-model="majorForm.majorEmployment"></el-input>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="EstablishmentColleges">开设院校</el-button>
