@@ -73,7 +73,8 @@ public class SecurityConfig{
                             "/api/major/selectMajorListCount",
                             "/images/university/",
                             "/api/university/selectById",
-                            "/api/universityCollection/selectByUserIdUniversityId"
+                            "/api/universityCollection/selectByUserIdUniversityId",
+                            "/feedback/images/**"
                     ).permitAll()
 
                     // 其他所有请求需要认证

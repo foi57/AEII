@@ -270,7 +270,7 @@ const token1=localStorage.getItem(token.token);
         <template #default="scope">
           <template v-if="userRole === 'seniorAdmin' || (userRole === 'admin' && scope.row.usersRole === 'user')">
             <el-button type="primary" @click="editUserWithAvatar(scope.row)">编辑</el-button>
-            <el-button type="danger" @click="editUser(scope.row.usersId)">删除院校</el-button>
+            <el-button type="danger" @click="editUser(scope.row.usersId)">删除</el-button>
           </template>
         </template>
       </el-table-column>

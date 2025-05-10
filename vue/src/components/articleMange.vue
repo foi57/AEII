@@ -82,7 +82,7 @@ const columns = ref([
     width: 170,
     cellRenderer: ({ rowData }) => {
       // 仅当发布人ID与当前用户ID一致时显示操作按钮
-      if (rowData.articleSource === userStore.usersId && userStore.usersRole === 'seniorAdmin') {
+      if (rowData.articleSource === userStore.usersId || userStore.usersRole === 'seniorAdmin') {
         return h('div', [
           h(resolveComponent('ElButton'), {
             type: 'primary',
@@ -104,6 +104,7 @@ const columns = ref([
 ]);
 let articles = ref([]);
 const handleChange = () => {
+  form.pageNum = currentPage3.value;
   article.selectArticleList(form).then(res => {
     console.log(res.data.records)
     articles.value = res.data.records
@@ -176,20 +177,21 @@ function debounce(fn, delay) {
   </div>
 
 
-  <div style="height: 700px">
-    <ElAutoResizer v-if="articles.length">
-      <template #default="{ height, width }">
-        <ElTableV2
-            :columns="columns"
-            :data="articles"
-            :height="height"
-            :width="width"
-            border
-            style="width: 100%; height: 100%"
-        />
-      </template>
-    </ElAutoResizer>
-  </div>
+  <div style="height: 80vh; width: 100%">  <!-- 改为百分比宽度 -->
+  <ElAutoResizer>
+    <template #default="{ height, width }">
+      <ElTableV2
+        :columns="columns"
+        :data="articles"
+        :width="width"
+        :height="height"
+        :estimated-row-height="50"  
+        row-class="custom-row"  
+        border
+      />
+    </template>
+  </ElAutoResizer>
+</div>
   <div class="page-block">
     <el-pagination
         v-model:current-page="currentPage3"

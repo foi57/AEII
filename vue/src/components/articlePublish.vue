@@ -93,6 +93,7 @@ import serverUrl from "../../serverUrl.js";
 import universityApi from "../../api/university.js";
 import {Store} from "../store/index.js";
 import {useRoute} from "vue-router";
+import articleCategories from '../assets/articleCategories.js'
 
 const route = useRoute()
 const userStore = Store();
@@ -216,12 +217,7 @@ const rules = {
 }
 
 // 分类选项
-const categories = [
-  { label: '招生信息', value: 'admissionsInformation' },
-  { label: '考试通知', value: 'notice' },
-  { label: '政策解读', value: 'policy' },
-  { label: '备考指南', value: 'guide' }
-]
+const categories = articleCategories.categories
 
 // 提交表单
 const submitForm = async () => {

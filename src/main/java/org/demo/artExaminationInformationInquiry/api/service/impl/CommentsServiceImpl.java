@@ -132,6 +132,7 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments> i
     }
 
     @Override
+    @Transactional
     public Page<Comments> selectCommentListByArticleId(Long articleId, Integer pageNum, Integer pageSize, Long usersId) {
         Page<Comments> page = new Page<>(pageNum, pageSize);
         // 添加按创建时间降序排序

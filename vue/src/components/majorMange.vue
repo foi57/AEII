@@ -228,7 +228,7 @@ const EstablishmentColleges =() =>{
         <el-input placeholder="请输入就业方向" v-model="majorForm.majorEmployment"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="EstablishmentColleges">开设院校</el-button>
+        <el-button type="primary" @click="EstablishmentColleges" v-if="toDo!=='insert'">开设院校</el-button>
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">

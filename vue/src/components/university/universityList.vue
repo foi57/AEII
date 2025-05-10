@@ -501,7 +501,7 @@ const rules = {
         style="width: 300px; margin: 20px"
     ></el-autocomplete>
     <el-button type="primary" @click="handleSearch">搜索</el-button>
-    <el-button type="primary" v-if="majorId!=null && route.path==='/adminIndex'" @click="addEstablishmentUniversityDialog=true">添加开设院校</el-button>
+    <el-button type="primary" v-if="majorId!=null && route.path.includes('major/university/')" @click="addEstablishmentUniversityDialog=true">添加开设院校</el-button>
     <el-button type="primary" v-if="route.path==='/adminIndex' && majorId===null" @click="()=>{
       editDialog=true;
       isInsert=true;
@@ -559,7 +559,7 @@ const rules = {
        @mouseenter="hoverUniversityId = university.universityId"
        @mouseleave="hoverUniversityId = null"
   >
-    <div v-if="majorId && hoverUniversityId === university.universityId"
+    <div v-if="majorId && hoverUniversityId === university.universityId && route.path.includes('adminIndex') && (userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin')"
          class="delete-button"
          @click.stop="currentDeleteId = university.universityId; deleteEstablishmentUniversityDialog=true">
       ×
@@ -614,14 +614,31 @@ const rules = {
     <el-form-item label="院校名称" prop="universityName">
       <el-input v-model="universityForm.universityName" placeholder="请输入院校名称"></el-input>
     </el-form-item>
+    
+    
     <el-form-item label="院校地址" prop="universityArea">
-      <el-input v-model="universityForm.universityArea" placeholder="请输入院校地址"></el-input>
+      <el-select-v2
+        v-model="universityForm.universityArea"
+        :options="areaOptions"
+        placeholder="请选择院校地址"
+        style="width: 100%"
+      />
     </el-form-item>
     <el-form-item label="院校等级" prop="universityLevel">
-      <el-input v-model="universityForm.universityLevel" placeholder="请输入院校等级"></el-input>
+      <el-select-v2
+        v-model="universityForm.universityLevel"
+        :options="levelOptions"
+        placeholder="请选择院校等级"
+        style="width: 100%"
+      />
     </el-form-item>
     <el-form-item label="院校类型" prop="universityType">
-      <el-input v-model="universityForm.universityType"></el-input>
+      <el-select-v2
+        v-model="universityForm.universityType"
+        :options="typeOptions"
+        placeholder="请选择院校类型"
+        style="width: 100%"
+      />
     </el-form-item>
 
     <!-- 新增联系信息 -->

@@ -19,13 +19,14 @@ services:
       - app-network
 
   backend:
+   
     container_name: AEII_Backend
     build:
       context: . # Dockerfile.backend 在当前目录
       dockerfile: Dockerfile.backend
     restart: always
     ports:
-      - "9091:9091" # 将宿主机的 9091 端口映射到容器的 9091 端口
+      - "0.0.0.0:9091:9091" # 将宿主机的 9091 端口映射到容器的 9091 端口
     depends_on: # 确保 MySQL 先启动
       - mysql
     environment:
@@ -39,13 +40,14 @@ services:
       - app-network
 
   frontend:
+
     container_name: AEII_Frontend
     build:
       context: ./vue # Dockerfile.frontend 在 vue 目录
       dockerfile: Dockerfile.frontend
     restart: always
     ports:
-      - "6175:80" # 将宿主机的 6175 端口映射到容器的 80 端口 (Nginx 默认端口)
+      - "0.0.0.0:6175:80" # 将宿主机的 6175 端口映射到容器的 80 端口 (Nginx 默认端口)
     depends_on:
       - backend # 前端依赖后端
     networks:

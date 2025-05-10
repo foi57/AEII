@@ -94,6 +94,7 @@ function debounce(fn, delay) {
       {{university.universityFeatures}}
 
     </div>
+    <div v-if="universityList.length === 0">没有收藏</div>
   </div>
 
   <div v-else>

@@ -10,6 +10,7 @@ import articlePublish from "../components/articlePublish.vue";
 import articleMange from "../components/articleMange.vue";
 import carousel from "../components/carousel.vue"; // 导入轮播图组件
 import hotArticleManage from "../components/hotArticleManage.vue"; // 导入热门文章管理组件
+import FeedbackMange from "../components/feedback/FeedbackMange.vue"; // 导入反馈管理组件
 const userStore = Store();
 const userName = userStore.usersName;
 console.log(userName)
@@ -56,6 +57,7 @@ const outLogin = () => {
           <el-menu-item index="4">专业</el-menu-item>
           <el-menu-item index="5">学院</el-menu-item>
           <el-menu-item index="7">用户</el-menu-item>
+          <el-menu-item index="10">意见反馈</el-menu-item>
         </el-menu>
         <el-menu
         :default-active="activeIndex"
@@ -79,6 +81,7 @@ const outLogin = () => {
                         activeIndex === '7'? adminMange : 
                         activeIndex === '8'? carousel :
                         activeIndex === '9'? hotArticleManage :
+                        activeIndex === '10' ? FeedbackMange : 
                         null"></component>
       </el-main>
     </el-container>

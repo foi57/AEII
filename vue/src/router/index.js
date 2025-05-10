@@ -17,7 +17,7 @@ const routes = [
   {
     path: '/article/detail/:id',
     name: 'ArticleDetail',
-    component: () => import('../views/ArticleDetail.vue'),
+    component: () => import('../views/articleDetail.vue'),
     props: true
   },
   {
@@ -40,7 +40,7 @@ const routes = [
   {
     path: '/articles/:category',
     name: 'Articles',
-    component: () => import('../views/Articles.vue'),
+    component: () => import('../views/articles.vue'),
     props: true
   },
   {

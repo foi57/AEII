@@ -156,7 +156,7 @@ const goToAdvancedSearch = () => {
       <ul class="menu">
         <li><el-link href="/userIndex">首页</el-link></li>
         <li><el-link href="/university">学校查询</el-link></li>
-        <li><el-link href="/major">艺术类专业</el-link></li>
+        <li><el-link href="/major">艺术类专业查询</el-link></li>
       </ul>
     </el-col>
     <el-col :span="8" class="search-area">

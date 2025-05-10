@@ -44,3 +44,4 @@ mybatis-plus:
       logic-not-delete-value: 0
 server:
   port: 9091
+  address: 0.0.0.0  # 新增这行，允许外部访问
