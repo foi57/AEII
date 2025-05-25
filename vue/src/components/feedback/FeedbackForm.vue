@@ -26,6 +26,7 @@ import { ref, reactive } from 'vue';
 import tokenModule  from '../../assets/token';
 import feedback from '../../../api/feedback';
 import serverUrl from '../../../serverUrl';
+import { ElMessage } from 'element-plus';
 
 const form = reactive({
   content: '',
@@ -48,7 +49,7 @@ const submit = async () => {
   formData.append('images', form.screenshots);
   try {
     const res = await feedback.insert(formData);
-    console.log('反馈提交成功', res); 
+    ElMessage.success('反馈提交成功');
   }catch (error) {
     console.error('反馈提交失败', error); 
   }

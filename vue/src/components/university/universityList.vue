@@ -12,9 +12,16 @@ const props = defineProps({
   majorId: {
     type: Number,
     default: null
+  },
+  isAdminView: {
+    type: Boolean,
+    default: false
+  },
+  name: {
+    type: String,
+    default: ''
   }
 })
-
 const route = useRoute()
 let majorId =route.params.id;
 if (majorId === undefined) {
@@ -78,7 +85,7 @@ select();
 let editDialog = ref(false);
 const clickUniversity = (university) => {
   isInsert.value=false
-  if(userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin' && route.path==='/adminIndex'){
+  if((userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin') && route.path==='/adminIndex'){
     editDialog.value=true;
     universityForm.value.universityId=university.universityId;
     universityForm.value.universitySchoolBadge=university.universitySchoolbadge;
@@ -107,8 +114,9 @@ const token = localStorage.getItem('accessToken');
 const url = serverUrl.url;
 const isInsert = ref(false);
 const updateUniversity = () => {
-
-  const formData = {
+  formRef.value.validate((valid) =>{
+    if (valid) {
+     const formData = {
     ...universityForm.value,
     universityFeatures: universityForm.value.universityFeatures.join(','),
     // 处理空字符串转为null
@@ -137,6 +145,9 @@ if (isInsert.value) {
     ElMessage.error('编辑失败')
   })
 }
+    }
+  })
+  
 }
 const featuresOptions = ref([
   {
@@ -431,7 +442,8 @@ let handleDeleteDialog = ref(false);
 const deleteEstablishmentUniversityDialog = ref(false);
 const currentDeleteId = ref(null);
 const deleteEstablishmentUniversity = () => {
-  deleteEstablishmentUniversityDialog.value=false
+  if(majorId){
+deleteEstablishmentUniversityDialog.value=false
   major_university.deleteEstablishUniversity(majorId,currentDeleteId.value).then(res => {
     ElMessage.success('删除成功')
     select();
@@ -439,6 +451,17 @@ const deleteEstablishmentUniversity = () => {
     console.error(error);
     ElMessage.error('删除失败')
   })
+  }else{
+    deleteEstablishmentUniversityDialog.value=false
+    universityApi.deleteUniversity(currentDeleteId.value).then(res => {
+      ElMessage.success('删除成功')
+      select(); 
+    }).catch(error => {
+      console.error(error);
+      ElMessage.error('删除失败') 
+    })
+  }
+  
 }
 const addEstablishmentUniversityDialog = ref(false);
 const addEstablishmentUniversityName = ref('');
@@ -465,34 +488,21 @@ const addEstablishmentUniversity = () => {
     ElMessage.error('添加失败')
   })
 }
-// 在组件中新增验证规则
+
+const formRef = ref(null);
+
 const rules = {
-  universityEmail: [
-    {
-      type: 'email',
-      message: '请输入有效的邮箱地址',
-      trigger: ['blur', 'change']
-    }
-  ],
-  universityPhone: [
-    {
-      pattern: /^(\d{3,4}-)?\d{7,8}$/,
-      message: '请输入有效的电话号码',
-      trigger: ['blur', 'change']
-    }
-  ],
-  universityWebsite: [
-    {
-      pattern: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
-      message: '请输入有效的网址',
-      trigger: ['blur', 'change']
-    }
-  ]
-}
+  universityName: [{ required: true, message: '请输入院校名称', trigger: 'blur' }],
+  universityArea: [{ required: true, message: '请选择院校地址', trigger: 'change' }],
+  universityLevel: [{ required: true, message: '请选择院校等级', trigger: 'change' }],
+  universityType: [{ required: true, message: '请选择院校类型', trigger: 'change' }],
+  universityIntroduction: [{ required: true, message: '请输入院校介绍', trigger: 'blur' }]
+};
 
 </script>
 
 <template>
+  <h2 v-if="props.name!==''">{{ props.name }}开设院校</h2>
     <el-autocomplete
         v-model="universityFormS.universityName"
         :fetch-suggestions="querySearchAsync('')"
@@ -559,7 +569,7 @@ const rules = {
        @mouseenter="hoverUniversityId = university.universityId"
        @mouseleave="hoverUniversityId = null"
   >
-    <div v-if="majorId && hoverUniversityId === university.universityId && route.path.includes('adminIndex') && (userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin')"
+    <div v-if="isAdminView && hoverUniversityId === university.universityId  && (userStore.usersRole==='admin' || userStore.usersRole==='seniorAdmin')"
          class="delete-button"
          @click.stop="currentDeleteId = university.universityId; deleteEstablishmentUniversityDialog=true">
       ×
@@ -607,7 +617,7 @@ const rules = {
     </el-upload>
   </el-form-item>
 
-  <el-form :model="universityForm">
+  <el-form :model="universityForm"  :rules="rules"  ref="formRef">
     <el-form-item label="院校ID" v-if="false" prop="universityId">
       <el-input v-model="universityForm.universityId" placeholder="请输入院校ID"></el-input>
     </el-form-item>
@@ -664,7 +674,7 @@ const rules = {
           clearable
       />
     </el-form-item>
-    <el-form-item label="院校介绍" prop="universityIntroduction">
+    <el-form-item label="院校介绍">
       <el-input v-model="universityForm.universityIntroduction" placeholder="请输入院校介绍" type="textarea" :autosize="{ minRows: 4, maxRows: 8 }"></el-input>
     </el-form-item>
     <div class="edit-button-block">
@@ -683,7 +693,7 @@ const rules = {
       <el-button type="primary" @click="deleteUniversity">确认</el-button>
     </span>
   </el-dialog>
-  <el-dialog title="确认删除专业开设院校吗？" v-model="deleteEstablishmentUniversityDialog">
+  <el-dialog title="确认删除院校吗？" v-model="deleteEstablishmentUniversityDialog">
     <span slot="footer" class="dialog-footer">
       <el-button @click="deleteEstablishmentUniversityDialog=false">取消</el-button>
       <el-button type="primary" @click="deleteEstablishmentUniversity">确认</el-button>

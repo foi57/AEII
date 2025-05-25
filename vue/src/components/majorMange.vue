@@ -150,7 +150,7 @@ const handleDelete = () => {
 }
 const EstablishmentColleges =() =>{
   window.open(
-      `${window.location.origin}/major/university/${majorForm.value.majorId}/${majorForm.value.majorName}`,
+      `${window.location.origin}/major/university/${majorForm.value.majorId}/${majorForm.value.majorName}/true`,
       '_blank'
   )
 }

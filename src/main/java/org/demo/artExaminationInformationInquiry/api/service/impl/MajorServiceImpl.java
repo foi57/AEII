@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
 import org.demo.artExaminationInformationInquiry.api.entity.MajorCount;
+import org.demo.artExaminationInformationInquiry.api.entity.MajorTypeCount;
 import org.demo.artExaminationInformationInquiry.api.mapper.MajorMapper;
 import org.demo.artExaminationInformationInquiry.api.service.IMajorService;
 import org.demo.artExaminationInformationInquiry.api.service.IUniversityMajorService;
@@ -64,6 +65,26 @@ public class MajorServiceImpl extends ServiceImpl<MajorMapper, Major> implements
             MajorCountList.add(majorCount);
         });
         return MajorCountList;
+    }
+
+    @Override
+    public List<MajorTypeCount> selectMajorTypeCount() {
+        // 1. 使用自定义SQL查询类型统计
+        List<MajorTypeCount> typeList = baseMapper.selectMajorTypeCount();
+        
+        // 2. 为每个类型查询下属专业及数量
+        typeList.forEach(type -> {
+            List<MajorCount> majors = baseMapper.selectMajorsByCategory(type.getTypeName());
+            type.setMajors(majors);
+        });
+        
+        return typeList;
+    }
+
+    @Override
+    public Page<Major> selectMajorListByNameAndcategory(String name, String category, int pageNum, int pageSize) {
+        Page<Major> page = new Page<>(pageNum, pageSize);
+        return lambdaQuery().like(Major::getMajorName, name).like(Major::getMajorCategory, category).page(page);
     }
 
 }

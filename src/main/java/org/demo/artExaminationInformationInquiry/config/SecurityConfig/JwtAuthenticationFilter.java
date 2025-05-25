@@ -35,10 +35,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
         logger.debug("request.getRequestURI(): {}", request.getRequestURI());
-        String uri = request.getRequestURI();
-
-
-
+        if (request.getRequestURI().startsWith("/api/users/login") || request.getRequestURI().startsWith("/api/users/register") || request.getRequestURI().startsWith("/auth/refresh")) {
+            filterChain.doFilter(request, response); // 允许登录和注册请求通过
+            return;
+        }
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);

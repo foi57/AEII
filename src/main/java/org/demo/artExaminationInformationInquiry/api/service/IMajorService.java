@@ -3,6 +3,7 @@ package org.demo.artExaminationInformationInquiry.api.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
 import org.demo.artExaminationInformationInquiry.api.entity.MajorCount;
+import org.demo.artExaminationInformationInquiry.api.entity.MajorTypeCount;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -18,8 +19,10 @@ import java.util.List;
  */
 public interface IMajorService extends IService<Major> {
     Page<Major> selectMajorListByName(String name, int pageNum, int pageSize);
+    Page<Major> selectMajorListByNameAndcategory(String name, String category, int pageNum, int pageSize);
     boolean updateMajor(Major major);
     boolean deleteMajor(Long id);
     List<Major> selectMajorListByUniversityId(Long universityId);
     List<MajorCount> selectMajorListCount();
+    List<MajorTypeCount> selectMajorTypeCount();
 }

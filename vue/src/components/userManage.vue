@@ -76,7 +76,8 @@ const userForm = ref({
   email: '',
   phone: '',
   role: '',
-  avatar: '' // 添加avatar字段
+  avatar: '', // 添加avatar字段
+  changeName: false
 })
 const handleUserForm = (todo) => {
   formRef.value.validate((valid) => {  // 使用表单引用进行验证
@@ -88,15 +89,25 @@ const handleUserForm = (todo) => {
           handleDialog.value = false;
           selectUserType(userType.value)
         }).catch(error => {
+          console.error('添加失败', error)
           ElMessage.error(error.response.data)
         })
       }
       if (todo === 'edit') {
+        userForm.value.changeName=false;
+        if(editUserName.value !== userForm.value.userName){
+          userForm.value.changeName=true; 
+        }
+        console.log('userForm',userForm.value)
         user.updateUser(userForm.value).then(res => {
           ElMessage.success('编辑成功')
           handleDialog.value = false;
           selectUserType(userType.value)
+        }).catch(error => {
+          console.error('编辑失败', error)
+          ElMessage.error('编辑失败',error.response.data)
         })
+        userForm.value.changeName=false;
       }
     } else {
       ElMessage.error('请填写完整表单内容')
@@ -197,6 +208,7 @@ const onCropperReady = () => {
   cropper.value?.setAspectRatio(1) // 强制设置1:1比例
 }
 
+const editUserName = ref('')
 // 修改编辑用户方法，添加头像信息
 const editUserWithAvatar = (userData) => {
   insertOrEdit.value = 'edit';
@@ -210,6 +222,7 @@ const editUserWithAvatar = (userData) => {
     avatar: userData.usersAvatar || '' // 添加头像
   };
   handleDialog.value = true;
+  editUserName.value = userData.usersName;
 }
 
 const token1=localStorage.getItem(token.token);
@@ -359,10 +372,11 @@ const token1=localStorage.getItem(token.token);
       <el-form-item label="手机号" prop="phone">
         <el-input placeholder="请输入手机号" v-model="userForm.phone"></el-input>
       </el-form-item>
-      <el-form-item label="用户类型">
+      <el-form-item label="用户类型" v-if="userRole === 'seniorAdmin'">
         <el-select placeholder="请选择用户类型" v-model="userForm.role">
           <el-option label="管理员" value="admin"></el-option>
           <el-option label="高级管理员" value="seniorAdmin"></el-option>
+          <el-option label="普通用户" value="user"></el-option>
         </el-select>
       </el-form-item>
     </el-form>

@@ -11,13 +11,16 @@ import articleMange from "../components/articleMange.vue";
 import carousel from "../components/carousel.vue"; // 导入轮播图组件
 import hotArticleManage from "../components/hotArticleManage.vue"; // 导入热门文章管理组件
 import FeedbackMange from "../components/feedback/FeedbackMange.vue"; // 导入反馈管理组件
+import token from "../assets/token.js";
+
 const userStore = Store();
 const userName = userStore.usersName;
 console.log(userName)
 const activeIndex = ref('0') // 初始可以设为 '0' 或其他默认项
 const outLogin = () => {
   router.push('/login')
-  localStorage.removeItem('token')
+    localStorage.removeItem(token.token)
+    localStorage.removeItem(token.refreshToken)
   userStore.$reset()
   localStorage.removeItem('userStore')
 }

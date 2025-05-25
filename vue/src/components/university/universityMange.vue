@@ -5,7 +5,7 @@ import UniversityList from "./universityList.vue";
 </script>
 
 <template>
-<university-list></university-list>
+<university-list :isAdminView="true"></university-list>
 </template>
 
 <style scoped>

@@ -16,7 +16,10 @@ const disabled = ref(false);
 const userStore = Store();
 const categories = articleCategories.categories
 // 导入格式化函数
-const formatArticleType = articleCategories.formatArticleCategories
+const formatArticleType = (type) => {
+  const category = categories.find(cat => cat.value === type);
+  return category ? category.label : '未知类型'; // 如果找不到匹配的类型，返回 '其他' 
+}
 
 const form = reactive({
   articleTitle: '',
@@ -49,11 +52,24 @@ const columns = ref([
     key: 'articleTitle',
     dataKey: 'articleTitle',
     title: '文章标题',
-    width: 200,
-    cellRenderer: ({ rowData }) => h('span', {
-      onClick: () => handleRowClick(rowData),
-      style: { cursor: 'pointer', color: '#409eff' }
-    }, rowData.articleTitle)
+    width: 300,
+   cellRenderer: ({ rowData }) => {
+  return h(resolveComponent('ElTooltip'), {
+    placement: 'top',
+    content: rowData.articleTitle
+  }, () => h('span', {
+    onClick: () => handleRowClick(rowData),
+    style: { 
+      cursor: 'pointer', 
+      color: '#409eff',
+      display: 'inline-block',
+      width: '100%',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    }
+  }, rowData.articleTitle))
+}
   },
   {
     key: 'articleReleased',

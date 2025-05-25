@@ -27,7 +27,7 @@ const routes = [
     props: true
   },
   {
-    path: '/major/university/:id/:name',
+    path: '/major/university/:id/:name/:isAdminView',
     name: 'universityList',
     component: () => import('../components/university/universityList.vue'),
     props: true
@@ -120,11 +120,11 @@ router.beforeEach((to, from, next) => {
   const userRole = userStore.usersRole // 从 store 获取用户角色
 
   // 需要管理员权限的路由
-  const adminRoutes = ['/adminIndex', '/adminLogin'] // 添加其他需要控制的管理路由
+  const adminRoutes = ['/adminIndex'] // 添加其他需要控制的管理路由
 
   if (adminRoutes.includes(to.path)) {
     if (!isAuthenticated) {
-      return next('/adminLogin')
+      return next('/login')
     }
     // 新增角色校验
     if (!['admin', 'seniorAdmin'].includes(userRole)) {
@@ -134,7 +134,7 @@ router.beforeEach((to, from, next) => {
   }
 
   // 原有登录状态校验保持不变
-  if (to.path === '/adminLogin' && isAuthenticated) {
+  if (to.path === '/login' && isAuthenticated) {
     next('/adminIndex')
   } else {
     next()

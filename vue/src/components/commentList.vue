@@ -181,6 +181,9 @@ const isReply=ref(false)
 const isSubComment= ref(false)
 
 const handleReplay = (id,name,UserId)=>{
+  if (!props.checkLogin()) {
+    return
+  }
   
   replyId.value = id
   replyName.value = name

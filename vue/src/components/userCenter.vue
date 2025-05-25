@@ -24,6 +24,7 @@ const userForm = ref({
   email: '',
   phone: '',
   role: '',
+  changeName: false,
   avatar: computed(() => {
     return userStore.usersAvatar
   })
@@ -44,20 +45,39 @@ const rules = {
 }
 const handleEditDialog = ref(false);
 let handlePasswordDialog = ref(false);
+
 const updateUser = () => {
   userStore.setAvatar(newAvatarUrl.value)
-  console.log('更新后头像',userStore.usersAvatar)
+  if (userName !== userForm.value.userName) {
+    userForm.value.changeName = true;
+  }
   userApi.updateUser(userForm.value).then(res => {
     ElMessage.success('编辑成功')
     handleEditDialog.value = false;
+    const loagecalUserForm = ref({
+      usersId: userForm.value.id,
+      usersAvatar: userForm.value.avatar,
+      usersName: userForm.value.userName,
+      usersPhone: userForm.value.phone,
+      usersEmail: userForm.value.email,
+      usersRole: userForm.value.role,
+    })
+    userStore.setUserInfo(loagecalUserForm.value)
+    user.value[0]=loagecalUserForm.value;
+  }).catch(err => {ElMessage.error(err.response.data)
+    console.error(err)
   })
+  userForm.value.changeName = false;
 }
+
 const passwordForm = ref({
   oldPassword: '',
   newPassword: '',
   confirmPassword: ''
 })
+
 const formRef = ref(null)
+
 const validatePassword = (rule, value, callback) => {
   if (value === passwordForm.value.oldPassword) {
     callback(new Error('新密码不能与旧密码相同'));
@@ -65,6 +85,7 @@ const validatePassword = (rule, value, callback) => {
     callback();
   }
 };
+
 const validateConfirm = (rule, value, callback) => {
   if (value !== passwordForm.value.newPassword) {
     callback(new Error('两次输入密码不一致'))
@@ -72,6 +93,7 @@ const validateConfirm = (rule, value, callback) => {
     callback()
   }
 }
+
 const passwordRules = {
   oldPassword: [
     { required: true, message: '请输入旧密码', trigger: 'blur' },

@@ -4,6 +4,7 @@ import major from "../../api/major.js";
 import {useRoute} from "vue-router";
 import UniversityList from "../components/university/universityList.vue";
 import Header from "../components/header.vue";
+import * as echarts from 'echarts';
 const route = useRoute()
 const majorName = route.params.name
 const majorList = ref()
@@ -14,6 +15,9 @@ const loadDate =async () => {
   console.log(majorList.value)
 }
 loadDate()
+
+
+
 </script>
 
 <template>
@@ -48,10 +52,11 @@ loadDate()
     <el-col :span="19">
       <el-card>
         <h2>开设院校</h2>
-        <UniversityList  :major-id="majorList.majorId" />
+        <UniversityList  :major-id="majorList.majorId"/>
       </el-card>
     </el-col>
   </el-row>
+   
 </div>
 </template>
 

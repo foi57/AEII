@@ -58,6 +58,7 @@ export default {
         })
     },
     updateUser(user) {
+        console.log(user)
         return request({
             url: '/users/update',
             method: 'post',
@@ -66,7 +67,8 @@ export default {
                 name: user.userName,
                 phone: user.phone,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                changeName: user.changeName
             }
         })
     },

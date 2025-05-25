@@ -165,6 +165,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
                 articleUniversityMapper.batchInsert(articleUniversities);
             }
+            articleMapper.updateById(oldArticle);
+        }else {
+            throw new RuntimeException("文章不存在");
         }
     }
 

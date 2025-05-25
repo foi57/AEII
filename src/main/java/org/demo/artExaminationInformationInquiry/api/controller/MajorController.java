@@ -3,6 +3,7 @@ package org.demo.artExaminationInformationInquiry.api.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.demo.artExaminationInformationInquiry.api.entity.Major;
 import org.demo.artExaminationInformationInquiry.api.entity.MajorCount;
+import org.demo.artExaminationInformationInquiry.api.entity.MajorTypeCount;
 import org.demo.artExaminationInformationInquiry.api.service.IMajorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,5 +60,14 @@ public class MajorController {
     public List<MajorCount> selectMajorListCount() {
         return majorService.selectMajorListCount();
     }
+    @GetMapping("/selectMajorTypeCount")
+    public List<MajorTypeCount> selectMajorTypeCount() {
+        return majorService.selectMajorTypeCount();
+    }
     
+    @GetMapping("/selectMajorListByNameAndCategory")
+    public Page<Major> selectMajorListByNameAndCategory(@RequestParam("name") String name, @RequestParam("category") String category, @RequestParam("page") Integer pageNum, @RequestParam("size") Integer pageSize) {
+        logger.debug("name: {} category: {} pageNum: {} pageSize: {}", name, category, pageNum, pageSize);
+        return majorService.selectMajorListByNameAndcategory(name, category, pageNum, pageSize); 
+    }
 }

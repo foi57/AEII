@@ -106,13 +106,17 @@ public class UsersController {
        }
    }
    @PostMapping("/update")
-   public ResponseEntity<String> updateUser(@RequestParam("id") Long id,@RequestParam("name") String name,@RequestParam("email") String email,@RequestParam("phone")String phone,@RequestParam("role") String role){
+   public ResponseEntity<String> updateUser(@RequestParam("id") Long id,@RequestParam("name") String name,@RequestParam("email") String email,@RequestParam("phone")String phone,@RequestParam("role") String role,@RequestParam("changeName") Boolean changeName){
+        if (changeName) {
+           if (usersService.selectUsersByName(name)!= null) {
+           logger.debug("用户名已存在");
+           return ResponseEntity.status(400).body("用户名已存在"); 
+        }
+        }
+        logger.debug("id:{}name:{}email:{}phone:{}role:{}changeName:{}",id,name,email,phone,role,changeName);
+        
         try {
-           Users users = usersService.selectUsersByName(name);
-           if (!Objects.equals(users.getUsersId(), id)){
-              logger.error("更新错误");
-              throw new Exception("更新错误");
-           }
+           Users users = usersService.selectUsersById(id);
            users.setUsersEmail(email);
            users.setUsersPhone(phone);
            users.setUsersRole(role);
@@ -120,7 +124,7 @@ public class UsersController {
            usersService.updateUser(users);
            return ResponseEntity.ok("success");
         }catch (Exception e){
-           logger.error("更新失败");
+           logger.error("更新失败",e);
            return ResponseEntity.status(400).body("更新失败");
         }
    }

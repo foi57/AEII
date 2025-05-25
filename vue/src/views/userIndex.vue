@@ -66,76 +66,8 @@ const loadPolicy = () => loadData(article.selectArticleList, policyForm, policyA
 const loadGuide = () => loadData(article.selectArticleList, guideForm, guideArticle);
 const loadCarousel = () => loadData(carousel.getCarouselList, {}, carouselItems); // 无需表单
 const loadHotArticles = () => loadData(hotArticle.getHotArticleList, {}, HotArticles); // 无需表单
-// 新增：加载并渲染专业院校数量图表的方法
-const loadMajorUniversityChart = async () => {
-  if (!majorChartContainer.value) {
-    console.error("图表容器尚未准备好");
-    return;
-  }
 
-  try {
-    // 假设 majorApi.getMajorUniversityCounts() 返回所需数据
-    // 格式: [{ majorName: '专业A', count: 10 }, ...]
-    const res = await majorApi.selectMajorListCount();
-    const chartData = res.data; // 假设接口返回的数据结构
 
-    if (!chartData || chartData.length === 0) {
-      console.warn("没有获取到专业院校数量数据");
-      // 可以选择显示一个空状态
-      return;
-    }
-
-    // 准备 ECharts 配置项
-    const majorNames = chartData.map(item => item.majorName);
-    const counts = chartData.map(item => item.count);
-
-    const myChart = echarts.init(majorChartContainer.value);
-    const option = {
-      title: {
-        text: '各艺术类专业开设院校数量统计',
-        left: 'center'
-      },
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'shadow'
-        }
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'value',
-        boundaryGap: [0, 0.01]
-      },
-      yAxis: {
-        type: 'category',
-        data: majorNames // 专业名称作为 Y 轴
-      },
-      series: [
-        {
-          name: '开设院校数量',
-          type: 'bar', // 设置为柱状图
-          data: counts // 院校数量作为数据
-        }
-      ]
-    };
-
-    myChart.setOption(option);
-
-    // 添加窗口大小调整监听
-    window.addEventListener('resize', () => {
-      myChart.resize();
-    });
-
-  } catch (err) {
-    console.error("加载专业院校数量图表失败:", err);
-    // 可以显示错误提示
-  }
-};
 // --- 生命周期钩子 ---
 onMounted(async () => {
   isLoading.value = true;
@@ -150,7 +82,6 @@ onMounted(async () => {
       loadCarousel(),
       loadHotArticles(),
       await nextTick(),
-      loadMajorUniversityChart() // 加载专业院校数量图表
     ]);
   } catch (err) {
     // Promise.all 如果有任何一个 reject，会进入 catch
@@ -237,7 +168,7 @@ const goToAdvancedSearch = () => {
                 <el-skeleton-item variant="image" style="width: 100%; height: 400px;" />
               </template>
               <template #default>
-                <el-carousel :interval="5000" height="400px" v-if="carouselItems.length > 0">
+                <el-carousel :interval="5000"  height="400px" v-if="carouselItems.length > 0">
                   <el-carousel-item v-for="item in carouselItems" :key="item.id">
                     <div class="carousel-content">
                       <a :href="item.link" target="_blank" v-if="item.link">
@@ -253,7 +184,7 @@ const goToAdvancedSearch = () => {
           </div>
         </el-col>
         <el-col :xs="24" :sm="8"> <!-- 响应式布局 -->
-          <el-card class="hot-article-card" shadow="hover">
+          <el-card  class="hot-article-card" shadow="hover">
             <template #header>
               <div class="card-header">
                 <span>热门文章</span>
@@ -278,15 +209,7 @@ const goToAdvancedSearch = () => {
         </el-col>
       </el-row>
 
-  <!-- 新增：专业院校数量图表 -->
-  <el-card class="box-card chart-card" style="margin-top: 20px;">
-           <template #header>
-             <div class="card-header">
-               <span>专业热度分析</span>
-             </div>
-           </template>
-           <div ref="majorChartContainer" style="width: 100%; height: 600px;"></div>
-        </el-card>
+ 
 
       <!-- 最新文章 -->
       <el-card class="article-section-card" shadow="hover">
@@ -568,8 +491,5 @@ const goToAdvancedSearch = () => {
   padding: 20px 0;
 }
 
-/* 新增：图表卡片样式 */
-.chart-card .el-card__body {
-  padding: 20px; /* 给图表一些内边距 */
-}
+
 </style>

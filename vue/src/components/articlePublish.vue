@@ -238,7 +238,7 @@ const submitForm = async () => {
         ...submitData,
         articleId: editId
       })
-
+      console.log('更新文章',submitData)
     } else {
       await article.publish(submitData)
       resetForm()

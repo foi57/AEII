@@ -11,6 +11,7 @@ import Header from "../components/header.vue";
 import universityCollection from "../../api/universityCollection.js";
 import {Store} from "../store/index.js";
 import {setTitle} from "../utils/titleManager.js";
+import articleCategories from "../assets/articleCategories.js"
 
 const userStore = Store()
 const route = useRoute();
@@ -51,13 +52,7 @@ onMounted(() => {
 })
 
 
-const categories = [
-  {label: '最新文章', value: ''},
-  { label: '招生信息', value: 'admissionsInformation' },
-  { label: '考试通知', value: 'notice' },
-  { label: '政策解读', value: 'policy' },
-  { label: '备考指南', value: 'guide' }
-]
+const categories = articleCategories.categories;
 const articleType = ref('')
 const handleChange = async () => {
 
@@ -112,7 +107,7 @@ selectCollection()
 
 <template>
   <Header></Header>
-  <div class="university-detail-container">
+  <div class="university-detail-container" >
     <el-row :gutter="20">
       <!-- 校徽和基本信息 -->
       <el-col :span="6">
@@ -170,17 +165,23 @@ selectCollection()
 
           <!-- 新增专业展示模块 -->
           <h2>开设艺术类专业</h2>
-          <div class="majors">
-            <el-tag
+          <div class="majors" v-if="university.majors?.length > 0">
+           
+              <el-tag
                 v-for="major in university.majors"
                 :key="major.majorId"
                 type="success"
                 class="major-tag"
             >
-              {{ major.majorName }}
-            </el-tag>
+            <el-link :href="`/major/detail/${major.majorName}`"> {{ major.majorName }} </el-link>
+              </el-tag>
+           
           </div>
 
+          <!-- 新增专业展示模块 -->
+          <div v-else>
+            暂无信息
+          </div>
        
           <h2>院校介绍</h2>
           <div class="introduction">

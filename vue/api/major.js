@@ -48,5 +48,20 @@ export default {
             url: '/major/selectMajorListCount',
             method: 'get',
         })
-    }
+    },
+    // ... existing code ...
+
+selectMajorTypeCount() {
+    return request({
+        url: '/major/selectMajorTypeCount',
+        method: 'get'
+    })
+},
+selectMajorListByNameAndCategory(data){
+    return request({
+        url: '/major/selectMajorListByNameAndCategory',
+        method: 'get', 
+        params: data
+    })
+}
 }

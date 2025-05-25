@@ -117,6 +117,7 @@ public class CommentsNotificationServiceImpl extends ServiceImpl<CommentsNotific
             // 查询这些ID对应的评论
             List<Comments> commentsList = commentsService.lambdaQuery()
                 .in(Comments::getCommentsId, replyCommentsIds)
+                .orderByDesc(Comments::getCreateTime)
                 .list();
             
             // 为每个评论设置已读状态
